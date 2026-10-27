@@ -90,6 +90,28 @@ class ConsultorioApi {
     }
   }
 
+  Future<void> abrirEnEscritorio(String enlace) async {
+    final uri = Uri.parse('${origen}api/llamada/consultorio/escritorio');
+    try {
+      final respuesta = await http
+          .post(
+            uri,
+            headers: {...cabeceras, 'Content-Type': 'application/json'},
+            body: jsonEncode({'meetingUri': enlace}),
+          )
+          .timeout(const Duration(seconds: 15));
+      if (respuesta.statusCode >= 400) {
+        throw ConsultorioException(_mensajeHttp(respuesta.statusCode, respuesta.body, 'escritorio'));
+      }
+    } on ConsultorioException {
+      rethrow;
+    } on TimeoutException {
+      throw ConsultorioException('La sesión de escritorio tardó demasiado.');
+    } on SocketException {
+      throw ConsultorioException('No hay conexión con SISCOAPI para abrir el escritorio.');
+    }
+  }
+
   Future<Map<String, dynamic>> get(String ruta) async {
     final uri = Uri.parse('${origen}api/consultorio$ruta');
     try {

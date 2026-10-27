@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'screens/login_screen.dart';
+import 'screens/modulos_screen.dart';
 import 'screens/shell_screen.dart';
 import 'state/consultorio_store.dart';
 import 'theme/sisco_theme.dart';
@@ -59,9 +60,11 @@ class _SiscoAppState extends State<SiscoApp> {
         theme: siscoTheme(),
         home: !_store.listo
             ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-            : entro
-                ? const ShellScreen()
-                : const LoginScreen(),
+            : !entro
+                ? const LoginScreen()
+                : _store.modulo == null
+                    ? const ModulosScreen()
+                    : const ShellScreen(),
       ),
     );
   }

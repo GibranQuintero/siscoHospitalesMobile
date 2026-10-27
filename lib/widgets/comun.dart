@@ -96,7 +96,7 @@ class CitaTarjeta extends StatelessWidget {
                             TextButton.icon(
                               onPressed: onMeet,
                               icon: const Icon(Icons.videocam_outlined, size: 18),
-                              label: Text(meetListo ? 'Entrar a Meet' : 'Crear Meet'),
+                              label: Text(meetListo ? 'Entrar' : 'Videollamada'),
                             ),
                           if (onCat != null)
                             TextButton.icon(

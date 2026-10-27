@@ -1,9 +1,46 @@
 import 'package:flutter/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../formato.dart';
 import '../models/consultorio.dart';
 import '../services/consultorio_api.dart';
 import '../services/sesion.dart';
+
+enum ModuloApp { paciente, doctor, admin }
+
+ModuloApp? moduloDe(String valor) {
+  switch (valor) {
+    case 'paciente':
+      return ModuloApp.paciente;
+    case 'doctor':
+      return ModuloApp.doctor;
+    case 'admin':
+      return ModuloApp.admin;
+  }
+  return null;
+}
+
+String claveModulo(ModuloApp modulo) {
+  switch (modulo) {
+    case ModuloApp.paciente:
+      return 'paciente';
+    case ModuloApp.doctor:
+      return 'doctor';
+    case ModuloApp.admin:
+      return 'admin';
+  }
+}
+
+String tituloModulo(ModuloApp modulo) {
+  switch (modulo) {
+    case ModuloApp.paciente:
+      return 'Pacientes';
+    case ModuloApp.doctor:
+      return 'Doctores';
+    case ModuloApp.admin:
+      return 'Administración';
+  }
+}
 
 class ConsultorioScope extends InheritedNotifier<ConsultorioStore> {
   const ConsultorioScope({super.key, required ConsultorioStore store, required super.child}) : super(notifier: store);
@@ -22,6 +59,8 @@ class ConsultorioStore extends ChangeNotifier {
   bool cargando;
   bool listo = false;
   Sesion? sesion;
+  ModuloApp? modulo;
+  String pacienteActivoId = '';
   String telefonoCat = '';
   String cuentaTelefono = '';
   final salas = <String, String>{};
@@ -52,10 +91,50 @@ class ConsultorioStore extends ChangeNotifier {
     return cita.videollamadaUrl;
   }
 
+  static const _claveModulo = 'sisco_modulo';
+  static const _clavePaciente = 'sisco_paciente_activo';
+
+  Paciente? get pacienteActivo {
+    if (pacienteActivoId.isNotEmpty) {
+      final elegido = porId(pacienteActivoId);
+      if (elegido != null) return elegido;
+    }
+    final correo = (sesion?.email ?? '').trim().toLowerCase();
+    if (correo.isEmpty) return null;
+    for (final paciente in pacientes) {
+      if (paciente.correo.trim().toLowerCase() == correo) return paciente;
+    }
+    return null;
+  }
+
   Future<void> restaurar() async {
     sesion = await Sesion.leer();
     telefonoCat = await Sesion.leerTelefonoCat();
+    final prefs = await SharedPreferences.getInstance();
+    modulo = moduloDe(prefs.getString(_claveModulo) ?? '');
+    pacienteActivoId = prefs.getString(_clavePaciente) ?? '';
     listo = true;
+    _avisar();
+  }
+
+  Future<void> elegirModulo(ModuloApp valor) async {
+    modulo = valor;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_claveModulo, claveModulo(valor));
+    _avisar();
+  }
+
+  Future<void> quitarModulo() async {
+    modulo = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_claveModulo);
+    _avisar();
+  }
+
+  Future<void> elegirPaciente(String id) async {
+    pacienteActivoId = id;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_clavePaciente, id);
     _avisar();
   }
 
@@ -65,6 +144,9 @@ class ConsultorioStore extends ChangeNotifier {
     }
     sesion = await Sesion.entrar(email, password);
     telefonoCat = await Sesion.leerTelefonoCat();
+    final prefs = await SharedPreferences.getInstance();
+    modulo = moduloDe(prefs.getString(_claveModulo) ?? '');
+    pacienteActivoId = prefs.getString(_clavePaciente) ?? '';
     listo = true;
     _avisar();
     await cargar();
@@ -73,7 +155,12 @@ class ConsultorioStore extends ChangeNotifier {
   Future<void> salir() async {
     await Sesion.olvidar();
     sesion = null;
+    modulo = null;
+    pacienteActivoId = '';
     salas.clear();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_claveModulo);
+    await prefs.remove(_clavePaciente);
     pacientes = [];
     citas = [];
     hospitales = [];
@@ -104,6 +191,12 @@ class ConsultorioStore extends ChangeNotifier {
     salas[cita.id] = enlace;
     _avisar();
     return enlace;
+  }
+
+  Future<void> abrirEnEscritorio(String enlace) async {
+    origen = origen.isEmpty ? await ApiConfig.leer() : origen;
+    final api = ConsultorioApi(origen, cabeceras: sesion?.cabeceras ?? const {'Accept': 'application/json'});
+    await api.abrirEnEscritorio(enlace);
   }
 
   Future<void> cargar() async {
