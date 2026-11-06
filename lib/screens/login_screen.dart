@@ -4,6 +4,7 @@ import '../formato.dart';
 import '../services/consultorio_api.dart';
 import '../state/consultorio_store.dart';
 import '../theme/sisco_theme.dart';
+import '../widgets/comun.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _password = TextEditingController();
   var _oculto = true;
   var _entrando = false;
+  var _conexion = false;
   String? _error;
 
   @override
@@ -37,105 +39,160 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _entrar() async {
-    final store = ConsultorioScope.of(context);
-    setState(() {
-      _entrando = true;
-      _error = null;
-    });
-    try {
-      if (_api.text.trim().isNotEmpty) {
-        await ApiConfig.guardar(_api.text);
-      }
-      await store.entrar(_email.text, _password.text);
-    } on ConsultorioException catch (e) {
-      if (mounted) setState(() => _error = e.mensaje);
-    } catch (_) {
-      if (mounted) setState(() => _error = 'No se pudo entrar a SISCO.');
-    } finally {
-      if (mounted) setState(() => _entrando = false);
-    }
+  void _entrar() {
+    ConsultorioScope.of(context).entrarSinRed();
+  }
+
+  void _aviso(String texto) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
   }
 
   @override
   Widget build(BuildContext context) {
     const estilo = TextStyle(color: texto, fontSize: 16);
-    final direccion = 'http://$equipoLocal:5112/';
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: marino,
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            const Text('SISCO HOSPITALES', style: TextStyle(color: cian, fontWeight: FontWeight.w800, letterSpacing: 1)),
-            const SizedBox(height: 8),
-            const Text('Consultorio', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 8),
-            Text(
-              'El teléfono y esta computadora deben estar en la misma red. Los datos salen de $direccion',
-              style: const TextStyle(color: Colors.white70, height: 1.35),
-            ),
-            const SizedBox(height: 28),
-            TextField(
-              controller: _api,
-              style: estilo,
-              cursorColor: azul,
-              keyboardType: TextInputType.text,
-              textInputAction: TextInputAction.next,
-              autocorrect: false,
-              enableSuggestions: true,
-              decoration: const InputDecoration(
-                labelText: 'API de este equipo',
-                filled: true,
-                fillColor: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _email,
-              style: estilo,
-              cursorColor: azul,
-              autofocus: true,
-              keyboardType: TextInputType.text,
-              textInputAction: TextInputAction.next,
-              autocorrect: false,
-              decoration: const InputDecoration(labelText: 'Correo', filled: true, fillColor: Colors.white),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _password,
-              style: estilo,
-              cursorColor: azul,
-              obscureText: _oculto,
-              keyboardType: TextInputType.text,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) {
-                if (!_entrando) _entrar();
-              },
-              decoration: InputDecoration(
-                labelText: 'Contraseña',
-                filled: true,
-                fillColor: Colors.white,
-                suffixIcon: IconButton(
-                  onPressed: () => setState(() => _oculto = !_oculto),
-                  icon: Icon(_oculto ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+      backgroundColor: fondo,
+      body: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.fromLTRB(24, MediaQuery.paddingOf(context).top + 18, 24, 28),
+            decoration: const BoxDecoration(gradient: gradienteEncabezado),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AvatarIniciales(iniciales: 'S', gradiente: gradientePaciente, tamano: 52),
+                SizedBox(height: 16),
+                Text(nombreAplicacion, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                SizedBox(height: 6),
+                Text(
+                  'Inicia sesión\nen tu cuenta',
+                  style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w700, height: 1.15, letterSpacing: -0.6),
                 ),
-              ),
+              ],
             ),
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(_error!, style: const TextStyle(color: Color(0xFFFFD7A8), height: 1.4)),
-            ],
-            const SizedBox(height: 20),
-            FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: azul, padding: const EdgeInsets.symmetric(vertical: 14)),
-              onPressed: _entrando ? null : _entrar,
-              child: Text(_entrando ? 'Entrando…' : 'Entrar'),
+          ),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+              children: [
+                const Text('Correo electrónico', style: TextStyle(color: suave, fontSize: 12, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: _email,
+                  style: estilo,
+                  cursorColor: azul,
+                  autofocus: true,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  autocorrect: false,
+                  decoration: const InputDecoration(hintText: 'correoelectronico@gmail.com'),
+                ),
+                const SizedBox(height: 14),
+                const Text('Contraseña', style: TextStyle(color: suave, fontSize: 12, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: _password,
+                  style: estilo,
+                  cursorColor: azul,
+                  obscureText: _oculto,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) {
+                    if (!_entrando) _entrar();
+                  },
+                  decoration: InputDecoration(
+                    hintText: '•••••••',
+                    suffixIcon: IconButton(
+                      onPressed: () => setState(() => _oculto = !_oculto),
+                      icon: Icon(_oculto ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: suave),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => _aviso('Recupera la contraseña desde el portal de SISCO.'),
+                    child: const Text('¿Olvidaste tu contraseña?', style: TextStyle(color: cian, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                if (_error != null) ...[
+                  Text(_error!, style: const TextStyle(color: Color(0xFFBE123C), height: 1.4)),
+                  const SizedBox(height: 12),
+                ],
+                BotonPastilla(
+                  texto: _entrando ? 'Entrando…' : 'Iniciar sesión',
+                  onPressed: _entrando ? null : _entrar,
+                  fondo: const Color(0x1F0082AB),
+                  borde: const Color(0x4D0068A2),
+                  color: azul,
+                  expandir: true,
+                ),
+                const SizedBox(height: 22),
+                const Row(
+                  children: [
+                    Expanded(child: Divider(color: linea)),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      child: Text('O inicia sesión con', style: TextStyle(color: suave, fontSize: 12)),
+                    ),
+                    Expanded(child: Divider(color: linea)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _RedSocial(etiqueta: 'Google', onTap: () => _aviso('El acceso de SISCO es con correo y contraseña.'))),
+                    const SizedBox(width: 10),
+                    Expanded(child: _RedSocial(etiqueta: 'Facebook', onTap: () => _aviso('El acceso de SISCO es con correo y contraseña.'))),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => setState(() => _conexion = !_conexion),
+                  child: Text(_conexion ? 'Ocultar conexión' : 'Conexión del consultorio', style: const TextStyle(color: suave)),
+                ),
+                if (_conexion) ...[
+                  Text(
+                    'El teléfono y esta computadora deben estar en la misma red. Los datos salen de http://$equipoLocal:5112/',
+                    style: const TextStyle(color: suave, height: 1.35, fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _api,
+                    style: estilo,
+                    cursorColor: azul,
+                    textInputAction: TextInputAction.next,
+                    autocorrect: false,
+                    decoration: const InputDecoration(labelText: 'API de este equipo'),
+                  ),
+                ],
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+class _RedSocial extends StatelessWidget {
+  const _RedSocial({required this.etiqueta, required this.onTap});
+
+  final String etiqueta;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: texto,
+        side: const BorderSide(color: linea),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      onPressed: onTap,
+      child: Text(etiqueta),
     );
   }
 }

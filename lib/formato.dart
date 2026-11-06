@@ -67,8 +67,30 @@ bool esMismoDia(DateTime a, DateTime b) {
   return a.year == b.year && a.month == b.month && a.day == b.day;
 }
 
+const mesesCortos = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
 String fechaLarga(DateTime dia) {
   return '${dias[dia.weekday - 1]} ${dia.day} de ${meses[dia.month - 1]}';
+}
+
+String fechaTitulo(DateTime dia) {
+  final texto = '${dias[dia.weekday - 1]}, ${dia.day} de ${meses[dia.month - 1]}';
+  return texto[0].toUpperCase() + texto.substring(1);
+}
+
+String fechaCorta(DateTime dia) {
+  final mes = mesesCortos[dia.month - 1];
+  return '${dia.day} ${mes[0].toUpperCase()}${mes.substring(1)}';
+}
+
+int? edadCumplida(String iso, [DateTime? hoy]) {
+  final nacimiento = DateTime.tryParse(iso.trim());
+  if (nacimiento == null) return null;
+  final referencia = hoy ?? DateTime.now();
+  var edad = referencia.year - nacimiento.year;
+  final aunNoCumple = referencia.month < nacimiento.month || (referencia.month == nacimiento.month && referencia.day < nacimiento.day);
+  if (aunNoCumple) edad -= 1;
+  return edad < 0 ? null : edad;
 }
 
 String fechaDia(String iso) {

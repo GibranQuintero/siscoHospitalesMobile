@@ -1,12 +1,13 @@
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../datos_prueba.dart';
 import '../formato.dart';
 import '../models/consultorio.dart';
 import '../services/consultorio_api.dart';
 import '../services/sesion.dart';
 
-enum ModuloApp { paciente, doctor, admin }
+enum ModuloApp { paciente, doctor, recepcion, admin }
 
 ModuloApp? moduloDe(String valor) {
   switch (valor) {
@@ -14,6 +15,8 @@ ModuloApp? moduloDe(String valor) {
       return ModuloApp.paciente;
     case 'doctor':
       return ModuloApp.doctor;
+    case 'recepcion':
+      return ModuloApp.recepcion;
     case 'admin':
       return ModuloApp.admin;
   }
@@ -26,6 +29,8 @@ String claveModulo(ModuloApp modulo) {
       return 'paciente';
     case ModuloApp.doctor:
       return 'doctor';
+    case ModuloApp.recepcion:
+      return 'recepcion';
     case ModuloApp.admin:
       return 'admin';
   }
@@ -37,9 +42,31 @@ String tituloModulo(ModuloApp modulo) {
       return 'Pacientes';
     case ModuloApp.doctor:
       return 'Doctores';
+    case ModuloApp.recepcion:
+      return 'Recepción';
     case ModuloApp.admin:
       return 'Administración';
   }
+}
+
+String? siguienteEstadoRecepcion(String estado) {
+  switch (estado) {
+    case 'no_confirmada':
+      return 'confirmada';
+    case 'confirmada':
+      return 'en_consulta';
+  }
+  return null;
+}
+
+String? accionRecepcion(String estado) {
+  switch (estado) {
+    case 'no_confirmada':
+      return 'Confirmar cita';
+    case 'confirmada':
+      return 'Registrar llegada';
+  }
+  return null;
 }
 
 class ConsultorioScope extends InheritedNotifier<ConsultorioStore> {
@@ -57,6 +84,7 @@ class ConsultorioStore extends ChangeNotifier {
 
   var _activo = true;
   bool cargando;
+  bool demostracion = false;
   bool listo = false;
   Sesion? sesion;
   ModuloApp? modulo;
@@ -78,7 +106,7 @@ class ConsultorioStore extends ChangeNotifier {
   String get titulo {
     if (cuenta.isNotEmpty) return cuenta;
     if (clinica.isNotEmpty) return clinica;
-    return 'SISCO Hospitales';
+    return 'SISCO Servicios Médicos';
   }
 
   String get subtitulo => cuenta.isNotEmpty && clinica.isNotEmpty ? clinica : '';
@@ -138,6 +166,38 @@ class ConsultorioStore extends ChangeNotifier {
     _avisar();
   }
 
+  void entrarSinRed() {
+    demostracion = true;
+    sesion = const Sesion(token: 'local', idUsuario: '', nombre: '', email: '');
+    modulo = null;
+    pacienteActivoId = '';
+    listo = true;
+    _llenarPrueba();
+    _avisar();
+  }
+
+  void usarDemostracion() {
+    demostracion = true;
+    listo = true;
+    _llenarPrueba();
+    _avisar();
+  }
+
+  void _llenarPrueba() {
+    cuenta = 'SISCO Servicios Médicos';
+    clinica = 'Consultorio Roma';
+    cuentaTelefono = '5550000000';
+    telefonoCat = '5550000000';
+    origen = '';
+    error = null;
+    pacientes = DatosPrueba.pacientes();
+    citas = DatosPrueba.citas();
+    hospitales = DatosPrueba.hospitales();
+    medicos = DatosPrueba.medicos();
+    mensajes = DatosPrueba.mensajes();
+    catalogoEspecialidad = DatosPrueba.especialidades();
+  }
+
   Future<void> entrar(String email, String password) async {
     if (email.trim().isEmpty || password.isEmpty) {
       throw ConsultorioException('Escribe el correo y la contraseña.');
@@ -153,6 +213,14 @@ class ConsultorioStore extends ChangeNotifier {
   }
 
   Future<void> salir() async {
+    if (demostracion) {
+      sesion = null;
+      modulo = null;
+      pacienteActivoId = '';
+      _llenarPrueba();
+      _avisar();
+      return;
+    }
     await Sesion.olvidar();
     sesion = null;
     modulo = null;
@@ -177,6 +245,11 @@ class ConsultorioStore extends ChangeNotifier {
   }
 
   Future<String> salaMeet(Cita cita) async {
+    if (demostracion) {
+      final local = enlaceMeet(cita);
+      if (local.isNotEmpty) return local;
+      throw ConsultorioException('En el recorrido de prueba la videollamada no se conecta.');
+    }
     final existente = enlaceMeet(cita);
     if (existente.isNotEmpty) return existente;
     origen = origen.isEmpty ? await ApiConfig.leer() : origen;
@@ -194,12 +267,23 @@ class ConsultorioStore extends ChangeNotifier {
   }
 
   Future<void> abrirEnEscritorio(String enlace) async {
+    if (demostracion) {
+      throw ConsultorioException('En el recorrido de prueba la sesión de escritorio no se abre.');
+    }
     origen = origen.isEmpty ? await ApiConfig.leer() : origen;
     final api = ConsultorioApi(origen, cabeceras: sesion?.cabeceras ?? const {'Accept': 'application/json'});
     await api.abrirEnEscritorio(enlace);
   }
 
   Future<void> cargar() async {
+    if (demostracion) {
+      cargando = true;
+      _avisar();
+      _llenarPrueba();
+      cargando = false;
+      _avisar();
+      return;
+    }
     cargando = true;
     error = null;
     _avisar();
@@ -294,6 +378,17 @@ class ConsultorioStore extends ChangeNotifier {
     return citas.where((cita) => cita.inicio != null && esMismoDia(cita.inicio!, dia) && cita.estado == estado).length;
   }
 
+  void registrarPasoRecepcion(String citaId) {
+    final indice = citas.indexWhere((cita) => cita.id == citaId);
+    if (indice < 0) return;
+    final siguiente = siguienteEstadoRecepcion(citas[indice].estado);
+    if (siguiente == null) return;
+    final copia = List<Cita>.of(citas);
+    copia[indice] = citas[indice].copiar(estado: siguiente);
+    citas = copia;
+    _avisar();
+  }
+
   List<Cita> citasDe(String pacienteId) {
     final propias = citas.where((cita) => cita.pacienteId == pacienteId).toList();
     propias.sort((a, b) {
@@ -324,6 +419,7 @@ class ConsultorioStore extends ChangeNotifier {
           paciente.alias,
           paciente.curp,
           paciente.telefono,
+          paciente.correo,
           paciente.alergias.join(' '),
         ].join(' '),
       );

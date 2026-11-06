@@ -112,22 +112,30 @@ class _HospitalTarjeta extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(etiquetaTipoHospital(hospital.tipo), style: const TextStyle(color: azul, fontSize: 12, fontWeight: FontWeight.w800)),
+              if (hospital.ciudad.isNotEmpty)
+                Text(hospital.ciudad, style: const TextStyle(color: suave, fontSize: 13)),
+              const SizedBox(height: 4),
               Row(
                 children: [
                   Expanded(child: Text(hospital.nombre, style: const TextStyle(color: texto, fontWeight: FontWeight.w800, fontSize: 16))),
                   if (hospital.convenio) const Icon(Icons.verified_outlined, color: azul, size: 18),
                 ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                [etiquetaTipoHospital(hospital.tipo), hospital.ciudad, etiquetaNivel(hospital.nivel)].where((parte) => parte.isNotEmpty).join(' · '),
-                style: const TextStyle(color: suave, fontSize: 13),
-              ),
               if (especialidades.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Text(especialidades, style: const TextStyle(color: acero, fontSize: 13)),
+                const SizedBox(height: 8),
+                Text(especialidades, style: const TextStyle(color: acero, fontSize: 13, fontWeight: FontWeight.w600)),
               ],
-              if (medicos > 0) Text('$medicos médicos en esta sede', style: const TextStyle(color: suave, fontSize: 12)),
+              if (medicos > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    hospital.tipo == 'aseguradora'
+                        ? '$medicos ${medicos == 1 ? 'médico en enlace' : 'médicos en enlace'}'
+                        : '$medicos ${medicos == 1 ? 'médico asignado' : 'médicos asignados'}',
+                    style: const TextStyle(color: suave, fontSize: 12),
+                  ),
+                ),
             ],
           ),
         ),
@@ -148,7 +156,7 @@ class HospitalDetalleScreen extends StatelessWidget {
     final medicos = store.medicosDe(hospitalId);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Sede')),
+      appBar: const BarraGradiente(titulo: 'Sede'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [

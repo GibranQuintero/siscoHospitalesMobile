@@ -4,12 +4,40 @@ import '../state/consultorio_store.dart';
 import '../theme/sisco_theme.dart';
 import 'admin_inicio_screen.dart';
 import 'agenda_screen.dart';
-import 'ajustes_screen.dart';
 import 'hospitales_screen.dart';
 import 'inicio_screen.dart';
 import 'medicos_screen.dart';
 import 'paciente_home_screen.dart';
 import 'pacientes_screen.dart';
+import 'recepcion_inicio_screen.dart';
+import 'recepcion_llegadas_screen.dart';
+
+class _BarraUnica extends StatelessWidget {
+  const _BarraUnica({required this.destino});
+
+  final NavigationDestination destino;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xF2FFFFFF),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 64,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconTheme(data: const IconThemeData(color: azul, size: 24), child: destino.selectedIcon ?? destino.icon),
+              const SizedBox(height: 4),
+              Text(destino.label, style: const TextStyle(color: azul, fontSize: 11, fontWeight: FontWeight.w800)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class ShellScreen extends StatefulWidget {
   const ShellScreen({super.key});
@@ -30,46 +58,40 @@ class _ShellScreenState extends State<ShellScreen> {
     final indice = _indice.clamp(0, pantallas.length - 1);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(tituloModulo(modulo)),
+      appBar: BarraGradiente(
+        titulo: tituloModulo(modulo),
         actions: [
-          IconButton(
-            tooltip: 'Cambiar módulo',
+          BotonEncabezado(
+            tooltip: 'Propiedades',
+            icono: Icons.grid_view_rounded,
             onPressed: store.quitarModulo,
-            icon: const Icon(Icons.apps),
           ),
-          IconButton(
-            tooltip: 'Recargar',
-            onPressed: store.cargando ? null : () => store.cargar(),
-            icon: const Icon(Icons.refresh),
-          ),
-          IconButton(
-            tooltip: 'Conexión',
-            onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AjustesScreen()));
-            },
-            icon: const Icon(Icons.tune),
-          ),
-          IconButton(
+          if (!store.demostracion)
+            BotonEncabezado(
+              tooltip: 'Recargar',
+              icono: Icons.refresh,
+              onPressed: store.cargando ? null : () => store.cargar(),
+            ),
+          BotonEncabezado(
             tooltip: 'Salir',
-            onPressed: () {
-              store.salir();
-            },
-            icon: const Icon(Icons.logout),
+            icono: Icons.logout,
+            onPressed: store.salir,
           ),
         ],
       ),
       body: Column(
         children: [
-          if (store.cargando) const LinearProgressIndicator(minHeight: 2, color: cian, backgroundColor: marino),
+          if (store.cargando) const LinearProgressIndicator(minHeight: 2, color: cian, backgroundColor: encabezado),
           Expanded(child: IndexedStack(index: indice, children: pantallas)),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: indice,
-        onDestinationSelected: (valor) => setState(() => _indice = valor),
-        destinations: destinos,
-      ),
+      bottomNavigationBar: destinos.length < 2
+          ? _BarraUnica(destino: destinos.first)
+          : NavigationBar(
+              selectedIndex: indice,
+              onDestinationSelected: (valor) => setState(() => _indice = valor),
+              destinations: destinos,
+            ),
     );
   }
 
@@ -78,9 +100,25 @@ class _ShellScreenState extends State<ShellScreen> {
       case ModuloApp.paciente:
         return const [PacienteHomeScreen()];
       case ModuloApp.doctor:
-        return const [InicioScreen(), AgendaScreen(), PacientesScreen()];
+        return [
+          InicioScreen(onVerAgenda: () => setState(() => _indice = 1)),
+          const AgendaScreen(),
+          const PacientesScreen(),
+        ];
+      case ModuloApp.recepcion:
+        return [
+          RecepcionInicioScreen(onVerLlegadas: () => setState(() => _indice = 1)),
+          const RecepcionLlegadasScreen(),
+        ];
       case ModuloApp.admin:
-        return const [AdminInicioScreen(), MedicosScreen(), HospitalesScreen()];
+        return [
+          AdminInicioScreen(
+            onMedicos: () => setState(() => _indice = 1),
+            onHospitales: () => setState(() => _indice = 2),
+          ),
+          const MedicosScreen(),
+          const HospitalesScreen(),
+        ];
     }
   }
 
@@ -95,6 +133,11 @@ class _ShellScreenState extends State<ShellScreen> {
           NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Inicio'),
           NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month), label: 'Agenda'),
           NavigationDestination(icon: Icon(Icons.folder_shared_outlined), selectedIcon: Icon(Icons.folder_shared), label: 'Expedientes'),
+        ];
+      case ModuloApp.recepcion:
+        return const [
+          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Inicio'),
+          NavigationDestination(icon: Icon(Icons.how_to_reg_outlined), selectedIcon: Icon(Icons.how_to_reg), label: 'Llegadas'),
         ];
       case ModuloApp.admin:
         return const [

@@ -9,11 +9,50 @@ void main() {
     await tester.pumpWidget(const SiscoApp(autoCargar: false, omitirLogin: true));
     expect(find.text('Elige un módulo'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Administración'));
     await tester.tap(find.text('Administración'));
     await tester.pump();
     await tester.pump();
     await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Hospitales')));
     await tester.pump();
     expect(find.text('Red hospitalaria'), findsOneWidget);
+  });
+
+  testWidgets('el login abre la selección de perfil sin llamar al servicio', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(const SiscoApp(autoCargar: false));
+    expect(find.text('Iniciar sesión'), findsOneWidget);
+
+    await tester.tap(find.text('Iniciar sesión'));
+    await tester.pump();
+    expect(find.text('Elige un módulo'), findsOneWidget);
+
+    await tester.tap(find.text('Pacientes'));
+    await tester.pump();
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Tu consultorio'), findsOneWidget);
+  });
+
+  testWidgets('recepción confirma una cita del día', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const SiscoApp(autoCargar: false));
+    await tester.tap(find.text('Iniciar sesión'));
+    await tester.pumpAndSettle();
+
+    final tarjeta = find.text('Agenda del día, llegadas y pase con el doctor.');
+    await tester.scrollUntilVisible(tarjeta, 200);
+    await tester.tap(tarjeta);
+    await tester.pumpAndSettle();
+    expect(find.text('POR ATENDER'), findsOneWidget);
+
+    await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Llegadas')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirmar cita').hitTestable());
+    await tester.pump();
+    expect(find.text('Confirmar cita'), findsNothing);
+    expect(find.text('Cita confirmada'), findsOneWidget);
   });
 }

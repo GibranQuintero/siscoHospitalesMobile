@@ -28,28 +28,46 @@ class MedicosScreen extends StatelessWidget {
           else
             for (final medico in store.medicos)
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: 10),
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
                   decoration: tarjeta(),
-                  child: Column(
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(medico.nombreCompleto, style: const TextStyle(color: texto, fontSize: 16, fontWeight: FontWeight.w800)),
-                      const SizedBox(height: 4),
-                      Text(
-                        medico.esEspecialista && medico.especialidad.isNotEmpty ? medico.especialidad : 'Médico general',
-                        style: const TextStyle(color: acero, fontWeight: FontWeight.w700),
-                      ),
-                      if (medico.cedula.isNotEmpty) Text('Cédula ${medico.cedula}', style: const TextStyle(color: suave)),
-                      if (medico.estatus.isNotEmpty) Text(medico.estatus, style: const TextStyle(color: suave)),
-                      if (medico.telefono.isNotEmpty)
-                        TextButton.icon(
-                          onPressed: () => abrirSiPuede(context, enlaceTelefono(medico.telefono)),
-                          icon: const Icon(Icons.call_outlined, size: 18),
-                          label: Text(medico.telefono),
+                      AvatarIniciales(iniciales: inicialesDe(medico.nombre, medico.apellido), gradiente: gradienteDoctor, tamano: 46),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(child: Text(medico.nombreCompleto, style: const TextStyle(color: texto, fontSize: 16, fontWeight: FontWeight.w800))),
+                                if (medico.estatus.isNotEmpty)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(color: exito.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(999)),
+                                    child: Text(medico.estatus, style: const TextStyle(color: exito, fontSize: 11, fontWeight: FontWeight.w700)),
+                                  ),
+                              ],
+                            ),
+                            if (medico.cedula.isNotEmpty) Text('Cédula ${medico.cedula}', style: const TextStyle(color: suave, fontSize: 12)),
+                            const SizedBox(height: 2),
+                            Text(
+                              medico.esEspecialista && medico.especialidad.isNotEmpty ? medico.especialidad : 'Médico general',
+                              style: const TextStyle(color: azul, fontWeight: FontWeight.w700),
+                            ),
+                            if (medico.telefono.isNotEmpty)
+                              TextButton.icon(
+                                onPressed: () => abrirSiPuede(context, enlaceTelefono(medico.telefono)),
+                                icon: const Icon(Icons.call_outlined, size: 18),
+                                label: Text(medico.telefono),
+                              ),
+                          ],
                         ),
+                      ),
                     ],
                   ),
                 ),

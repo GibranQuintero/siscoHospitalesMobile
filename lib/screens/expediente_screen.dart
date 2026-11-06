@@ -21,41 +21,41 @@ class ExpedienteScreen extends StatelessWidget {
     final store = ConsultorioScope.of(context);
     final paciente = store.porId(pacienteId);
     final citas = store.citasDe(pacienteId);
+    final edad = paciente == null ? null : edadCumplida(paciente.fechaNacimiento);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Expediente')),
+      appBar: const BarraGradiente(titulo: 'Expediente'),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         children: [
           if (paciente == null)
             const AvisoVacio(texto: 'Este expediente ya no está en el consultorio.')
           else ...[
-            Text(paciente.nombreCompleto, style: const TextStyle(color: marino, fontSize: 24, fontWeight: FontWeight.w800)),
-            if (paciente.alias.isNotEmpty) Text(paciente.alias, style: const TextStyle(color: suave)),
-            const SizedBox(height: 14),
-            _Bloque(
-              titulo: 'Ficha',
-              child: Column(
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: tarjeta(),
+              child: Row(
                 children: [
-                  DatoFila(etiqueta: 'CURP', valor: paciente.curp),
-                  DatoFila(etiqueta: 'Sexo', valor: paciente.sexo),
-                  DatoFila(etiqueta: 'Nacimiento', valor: paciente.fechaNacimiento.isEmpty ? '' : fechaDia(paciente.fechaNacimiento)),
-                  DatoFila(etiqueta: 'Sangre', valor: paciente.tipoSangre),
-                  DatoFila(etiqueta: 'Ocupación', valor: paciente.ocupacion),
-                  DatoFila(etiqueta: 'Dirección', valor: paciente.direccion),
-                  DatoFila(
-                    etiqueta: 'Teléfono',
-                    valor: paciente.telefono,
-                    onTap: paciente.telefono.isEmpty ? null : () => abrirSiPuede(context, enlaceTelefono(paciente.telefono)),
+                  AvatarIniciales(iniciales: inicialesDe(paciente.nombre, paciente.apellido), gradiente: gradientePaciente),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('PACIENTE ACTIVO', style: TextStyle(color: cian, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.6)),
+                        Text(paciente.nombreCompleto, style: const TextStyle(color: texto, fontSize: 20, fontWeight: FontWeight.w800)),
+                        Text('Nº Expediente: ${paciente.id}', style: const TextStyle(color: suave, fontSize: 12)),
+                      ],
+                    ),
                   ),
-                  DatoFila(etiqueta: 'Correo', valor: paciente.correo, onTap: paciente.correo.isEmpty ? null : () => abrirSiPuede(context, 'mailto:${paciente.correo}')),
                 ],
               ),
             ),
             if (paciente.alergias.isNotEmpty) ...[
               const SizedBox(height: 12),
-              _Bloque(
-                titulo: 'Alergias',
+              FichaBloque(
+                titulo: 'ALERGIAS CONOCIDAS',
                 child: Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -63,17 +63,42 @@ class ExpedienteScreen extends StatelessWidget {
                     for (final alergia in paciente.alergias)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(color: const Color(0xFFFFF7ED), borderRadius: BorderRadius.circular(999)),
-                        child: Text(alergia, style: const TextStyle(color: Color(0xFF9A3412), fontWeight: FontWeight.w700)),
+                        decoration: BoxDecoration(color: const Color(0xFFFFF1F2), borderRadius: BorderRadius.circular(999)),
+                        child: Text(alergia, style: const TextStyle(color: Color(0xFFBE123C), fontWeight: FontWeight.w700)),
                       ),
                   ],
                 ),
               ),
             ],
+            const SizedBox(height: 12),
+            FichaBloque(
+              titulo: 'FICHA DE IDENTIFICACIÓN',
+              child: Column(
+                children: [
+                  DatoFila(etiqueta: 'CURP', valor: paciente.curp),
+                  DatoFila(etiqueta: 'SEXO', valor: paciente.sexo),
+                  DatoFila(etiqueta: 'GRUPO SANGUÍNEO', valor: paciente.tipoSangre),
+                  DatoFila(
+                    etiqueta: 'NACIMIENTO',
+                    valor: paciente.fechaNacimiento.isEmpty
+                        ? ''
+                        : '${fechaDia(paciente.fechaNacimiento)}${edad == null ? '' : ' · $edad años cumplidos'}',
+                  ),
+                  DatoFila(etiqueta: 'OCUPACIÓN', valor: paciente.ocupacion),
+                  DatoFila(etiqueta: 'DIRECCIÓN', valor: paciente.direccion),
+                  DatoFila(
+                    etiqueta: 'TELÉFONO',
+                    valor: paciente.telefono,
+                    onTap: paciente.telefono.isEmpty ? null : () => abrirSiPuede(context, enlaceTelefono(paciente.telefono)),
+                  ),
+                  DatoFila(etiqueta: 'CORREO', valor: paciente.correo, onTap: paciente.correo.isEmpty ? null : () => abrirSiPuede(context, 'mailto:${paciente.correo}')),
+                ],
+              ),
+            ),
             if (paciente.seguros.isNotEmpty) ...[
               const SizedBox(height: 12),
-              _Bloque(
-                titulo: 'Seguros',
+              FichaBloque(
+                titulo: 'PÓLIZA Y SEGUROS',
                 child: Column(
                   children: [
                     for (final seguro in paciente.seguros)
@@ -82,10 +107,14 @@ class ExpedienteScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(seguro.aseguradora, style: const TextStyle(fontWeight: FontWeight.w700, color: texto)),
+                            Row(
+                              children: [
+                                Expanded(child: Text(seguro.aseguradora, style: const TextStyle(fontWeight: FontWeight.w700, color: texto))),
+                                const Text('Vigente', style: TextStyle(color: exito, fontSize: 12, fontWeight: FontWeight.w700)),
+                              ],
+                            ),
                             Text(
-                              [seguro.certificado, seguro.vigenciaHasta.isEmpty ? '' : 'vigente al ${fechaDia(seguro.vigenciaHasta)}']
-                                  .where((parte) => parte.isNotEmpty)
+                              [if (seguro.certificado.isNotEmpty) 'Póliza: ${seguro.certificado}', if (seguro.vigenciaHasta.isNotEmpty) 'Vigencia hasta ${fechaDia(seguro.vigenciaHasta)}']
                                   .join(' · '),
                               style: const TextStyle(color: suave, fontSize: 13),
                             ),
@@ -98,13 +127,13 @@ class ExpedienteScreen extends StatelessWidget {
             ],
             if (paciente.contactos.isNotEmpty) ...[
               const SizedBox(height: 12),
-              _Bloque(
-                titulo: 'Contactos',
+              FichaBloque(
+                titulo: 'CONTACTO DE EMERGENCIA',
                 child: Column(
                   children: [
                     for (final contacto in paciente.contactos)
                       DatoFila(
-                        etiqueta: contacto.parentesco.isEmpty ? 'Contacto' : contacto.parentesco,
+                        etiqueta: contacto.parentesco.isEmpty ? 'CONTACTO' : contacto.parentesco.toUpperCase(),
                         valor: [contacto.nombre, contacto.telefono].where((parte) => parte.isNotEmpty).join(' · '),
                         onTap: contacto.telefono.isEmpty ? null : () => abrirSiPuede(context, enlaceTelefono(contacto.telefono)),
                       ),
@@ -113,8 +142,8 @@ class ExpedienteScreen extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 12),
-            _Bloque(
-              titulo: 'Citas',
+            FichaBloque(
+              titulo: 'HISTORIAL DE CITAS',
               child: citas.isEmpty
                   ? const Text('Sin citas registradas.', style: TextStyle(color: suave))
                   : Column(
@@ -134,30 +163,6 @@ class ExpedienteScreen extends StatelessWidget {
                     ),
             ),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-class _Bloque extends StatelessWidget {
-  const _Bloque({required this.titulo, required this.child});
-
-  final String titulo;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: tarjeta(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(titulo, style: const TextStyle(color: acero, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 8),
-          child,
         ],
       ),
     );

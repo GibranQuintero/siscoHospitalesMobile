@@ -166,6 +166,23 @@ class Cita {
       folio: cadena(json['folio']),
     );
   }
+
+  Cita copiar({String? estado}) {
+    return Cita(
+      id: id,
+      pacienteId: pacienteId,
+      clinica: clinica,
+      inicio: inicio,
+      fin: fin,
+      estado: estado ?? this.estado,
+      motivo: motivo,
+      notas: notas,
+      videollamada: videollamada,
+      videollamadaUrl: videollamadaUrl,
+      pacienteNuevo: pacienteNuevo,
+      folio: folio,
+    );
+  }
 }
 
 class HospitalRed {

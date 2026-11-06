@@ -41,7 +41,7 @@ class _AjustesScreenState extends State<AjustesScreen> {
     final sugerida = ApiConfig.porPlataforma();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Conexión')),
+      appBar: const BarraGradiente(titulo: 'Conexión'),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
