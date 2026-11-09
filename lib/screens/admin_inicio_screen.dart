@@ -49,7 +49,7 @@ class AdminInicioScreen extends StatelessWidget {
             children: [
               _Conteo(numero: store.medicos.length, texto: 'Médicos', color: indigo),
               _Conteo(numero: store.hospitales.length, texto: 'Hospitales', color: cian),
-              _Conteo(numero: store.pacientes.length, texto: 'Pacientes', color: azul),
+              _Conteo(numero: store.pacientes.length, texto: 'Derechohabientes', color: azul),
               _Conteo(numero: store.citasDelDia(hoy).length, texto: 'Citas de hoy', color: exito),
             ],
           ),

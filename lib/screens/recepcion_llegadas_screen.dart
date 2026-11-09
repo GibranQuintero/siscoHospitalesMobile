@@ -54,7 +54,7 @@ class LlegadaTarjeta extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final inicio = cita.inicio;
-    final nombre = paciente?.nombreCompleto ?? 'Paciente';
+    final nombre = paciente?.nombreCompleto ?? 'Derechohabiente';
     final accion = accionRecepcion(cita.estado);
     return Material(
       color: Colors.transparent,
@@ -130,13 +130,13 @@ void aplicarPasoRecepcion(BuildContext context, Cita cita) {
   final accion = accionRecepcion(cita.estado);
   if (accion == null) return;
   ConsultorioScope.of(context).registrarPasoRecepcion(cita.id);
-  final mensaje = cita.estado == 'no_confirmada' ? 'Cita confirmada' : 'Llegada registrada. El paciente pasa con el doctor.';
+  final mensaje = cita.estado == 'no_confirmada' ? 'Cita confirmada' : 'Llegada registrada. El derechohabiente pasa con el doctor.';
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensaje)));
 }
 
 void mostrarFichaRecepcion(BuildContext context, Cita cita, Paciente? paciente) {
   final anfitrion = context;
-  final nombre = paciente?.nombreCompleto ?? 'Paciente';
+  final nombre = paciente?.nombreCompleto ?? 'Derechohabiente';
   final alergias = paciente == null
       ? ''
       : paciente.alergias.isEmpty

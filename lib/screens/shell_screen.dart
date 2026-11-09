@@ -4,8 +4,10 @@ import '../state/consultorio_store.dart';
 import '../theme/sisco_theme.dart';
 import 'admin_inicio_screen.dart';
 import 'agenda_screen.dart';
+import 'farmacia_screen.dart';
 import 'hospitales_screen.dart';
 import 'inicio_screen.dart';
+import 'laboratorio_screen.dart';
 import 'medicos_screen.dart';
 import 'paciente_home_screen.dart';
 import 'pacientes_screen.dart';
@@ -119,6 +121,10 @@ class _ShellScreenState extends State<ShellScreen> {
           const MedicosScreen(),
           const HospitalesScreen(),
         ];
+      case ModuloApp.farmacia:
+        return const [FarmaciaScreen()];
+      case ModuloApp.laboratorio:
+        return const [LaboratorioScreen()];
     }
   }
 
@@ -144,6 +150,14 @@ class _ShellScreenState extends State<ShellScreen> {
           NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Resumen'),
           NavigationDestination(icon: Icon(Icons.medical_services_outlined), selectedIcon: Icon(Icons.medical_services), label: 'Médicos'),
           NavigationDestination(icon: Icon(Icons.local_hospital_outlined), selectedIcon: Icon(Icons.local_hospital), label: 'Hospitales'),
+        ];
+      case ModuloApp.farmacia:
+        return const [
+          NavigationDestination(icon: Icon(Icons.medication_outlined), selectedIcon: Icon(Icons.medication), label: 'Recetas'),
+        ];
+      case ModuloApp.laboratorio:
+        return const [
+          NavigationDestination(icon: Icon(Icons.biotech_outlined), selectedIcon: Icon(Icons.biotech), label: 'Órdenes'),
         ];
     }
   }

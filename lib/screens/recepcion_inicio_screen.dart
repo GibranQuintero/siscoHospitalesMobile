@@ -61,7 +61,7 @@ class RecepcionInicioScreen extends StatelessWidget {
             ],
           ),
           if (pendientes.isEmpty)
-            const AvisoVacio(texto: 'No hay pacientes por recibir. Las llegadas de hoy aparecen en la agenda.')
+            const AvisoVacio(texto: 'No hay derechohabientes por recibir. Las llegadas de hoy aparecen en la agenda.')
           else
             for (final cita in pendientes)
               Padding(

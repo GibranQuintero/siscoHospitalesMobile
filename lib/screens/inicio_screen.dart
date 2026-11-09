@@ -51,7 +51,7 @@ class _InicioScreenState extends State<InicioScreen> {
             controller: _busqueda,
             onChanged: (_) => setState(() {}),
             decoration: const InputDecoration(
-              hintText: 'Buscar paciente, CURP o alerta...',
+              hintText: 'Buscar derechohabiente, CURP o alerta...',
               prefixIcon: Icon(Icons.search),
             ),
           ),
@@ -102,9 +102,11 @@ class _InicioScreenState extends State<InicioScreen> {
                   child: CitaTarjeta(
                     cita: cita,
                     paciente: store.nombrePaciente(cita.pacienteId),
+                    linea: store.lineaAgenda(cita),
+                    medico: cita.medicoId.isEmpty ? '' : store.nombreMedico(cita.medicoId),
                     meetListo: store.enlaceMeet(cita).isNotEmpty,
                     onTap: () => abrirExpediente(context, cita.pacienteId),
-                    onMeet: () => crearOAbrirMeet(context, cita),
+                    onMeet: cita.videollamada ? () => crearOAbrirMeet(context, cita) : null,
                     onCat: () => llamarACat(context),
                   ),
                 ),

@@ -23,8 +23,9 @@ class DatosPrueba {
         direccion: 'Roma Norte, Ciudad de México',
         ocupacion: 'Diseñadora',
         alergias: ['Penicilina'],
-        seguros: [SeguroPaciente(aseguradora: 'Seguro ejemplo', afiliado: 'Ana Ríos', certificado: 'PX-1001', vigenciaHasta: '2027-12-31')],
+        seguros: [SeguroPaciente(aseguradora: 'INDEP', afiliado: 'DH-1001', certificado: 'PX-1001', vigenciaHasta: '2027-12-31')],
         contactos: [ContactoEmergencia(nombre: 'Luis Ríos', parentesco: 'Hermano', telefono: '5551002002')],
+        regionIndep: 'Centro',
       ),
       Paciente(
         id: 'p-bruno',
@@ -41,8 +42,9 @@ class DatosPrueba {
         direccion: 'Guadalajara, Jalisco',
         ocupacion: 'Contador',
         alergias: ['Mariscos'],
-        seguros: [SeguroPaciente(aseguradora: 'Seguro ejemplo', afiliado: 'Bruno Salas', certificado: 'PX-1002', vigenciaHasta: '2027-06-30')],
+        seguros: [SeguroPaciente(aseguradora: 'INDEP', afiliado: 'DH-1002', certificado: 'PX-1002', vigenciaHasta: '2027-06-30')],
         contactos: [ContactoEmergencia(nombre: 'Marta Vega', parentesco: 'Esposa', telefono: '5551003004')],
+        regionIndep: 'Occidente',
       ),
       Paciente(
         id: 'p-clara',
@@ -59,8 +61,9 @@ class DatosPrueba {
         direccion: 'Monterrey, Nuevo León',
         ocupacion: 'Docente',
         alergias: [],
-        seguros: [],
+        seguros: [SeguroPaciente(aseguradora: 'INDEP', afiliado: 'DH-1003', certificado: 'PX-1003', vigenciaHasta: '2027-03-31')],
         contactos: [],
+        regionIndep: 'Norte',
       ),
     ];
   }
@@ -80,6 +83,10 @@ class DatosPrueba {
         videollamadaUrl: '',
         pacienteNuevo: false,
         folio: 'C-1001',
+        tipoServicio: 'Médico general',
+        medicoId: 'm-1',
+        origen: 'agenda',
+        creadoPor: 'Personal de apoyo',
       ),
       Cita(
         id: 'c-2',
@@ -94,6 +101,10 @@ class DatosPrueba {
         videollamadaUrl: '',
         pacienteNuevo: false,
         folio: 'C-1002',
+        tipoServicio: 'Médico especialista',
+        medicoId: 'm-3',
+        origen: 'agenda',
+        creadoPor: 'Personal de apoyo',
       ),
       Cita(
         id: 'c-3',
@@ -108,6 +119,10 @@ class DatosPrueba {
         videollamadaUrl: '',
         pacienteNuevo: true,
         folio: 'C-1003',
+        tipoServicio: 'Médico general',
+        medicoId: 'm-1',
+        origen: 'agenda',
+        creadoPor: 'Personal de apoyo',
       ),
       Cita(
         id: 'c-4',
@@ -122,6 +137,10 @@ class DatosPrueba {
         videollamadaUrl: '',
         pacienteNuevo: false,
         folio: 'C-1004',
+        tipoServicio: 'Médico general',
+        medicoId: 'm-1',
+        origen: 'agenda',
+        creadoPor: 'Personal de apoyo',
       ),
       Cita(
         id: 'c-5',
@@ -136,6 +155,46 @@ class DatosPrueba {
         videollamadaUrl: '',
         pacienteNuevo: false,
         folio: 'C-1005',
+        tipoServicio: 'Médico especialista',
+        medicoId: 'm-3',
+        origen: 'agenda',
+        creadoPor: 'Personal de apoyo',
+      ),
+      Cita(
+        id: 'c-6',
+        pacienteId: 'p-clara',
+        clinica: '',
+        inicio: null,
+        fin: null,
+        estado: 'no_confirmada',
+        motivo: 'Teleconsulta CAT',
+        notas: 'Llamada registrada sin sede ni horario.',
+        videollamada: true,
+        videollamadaUrl: '',
+        pacienteNuevo: false,
+        folio: 'CAT-1006',
+        tipoServicio: 'Médico general',
+        medicoId: '',
+        origen: 'llamada',
+        creadoPor: 'CAT',
+      ),
+      Cita(
+        id: 'c-7',
+        pacienteId: 'p-ana',
+        clinica: 'Hospital del Valle',
+        inicio: hora(2, 9, 30),
+        fin: hora(2, 10, 0),
+        estado: 'confirmada',
+        motivo: 'Espirometría de control',
+        notas: '',
+        videollamada: true,
+        videollamadaUrl: '',
+        pacienteNuevo: false,
+        folio: 'C-1007',
+        tipoServicio: 'Gabinete',
+        medicoId: 'm-2',
+        origen: 'agenda',
+        creadoPor: 'Personal de apoyo',
       ),
     ];
   }
@@ -238,6 +297,104 @@ class DatosPrueba {
     return [
       Mensaje(id: 'msg-1', pacienteId: 'p-ana', texto: '¿Puedo llegar diez minutos tarde?', de: 'paciente', cuando: hora(0, 8, 10)),
       Mensaje(id: 'msg-2', pacienteId: 'p-clara', texto: 'Confirmo la cita de las 16:00.', de: 'paciente', cuando: hora(0, 7, 40)),
+    ];
+  }
+
+  static List<ExpedienteClinico> expedientes() {
+    return const [
+      ExpedienteClinico(
+        pacienteId: 'p-ana',
+        antecedentes: [
+          Antecedente(titulo: 'Personales patológicos', detalle: 'Hipertensión arterial desde 2022, en tratamiento.'),
+          Antecedente(titulo: 'Alergias', detalle: 'Penicilina. Reacción cutánea.'),
+        ],
+        archivos: [ArchivoExpediente(nombre: 'quimica-ana.pdf', fecha: '2026-10-20')],
+        consentimientos: [ConsentimientoRegistro(nombre: 'Consentimiento general del derechohabiente', fecha: '2026-10-01', firmado: true)],
+      ),
+      ExpedienteClinico(
+        pacienteId: 'p-bruno',
+        antecedentes: [Antecedente(titulo: 'Personales patológicos', detalle: 'Lumbalgia recurrente. Sin cirugías.')],
+        archivos: [],
+        consentimientos: [ConsentimientoRegistro(nombre: 'Consentimiento general del derechohabiente', fecha: '2026-09-12', firmado: true)],
+      ),
+    ];
+  }
+
+  static List<ConsultaClinica> consultas() {
+    return [
+      ConsultaClinica(
+        id: 'k-ana',
+        citaId: 'c-4',
+        pacienteId: 'p-ana',
+        medicoId: 'm-1',
+        motivo: 'Resultados de laboratorio',
+        diagnostico: 'Hipertensión arterial en control',
+        plan: 'Continuar losartán y repetir la química en tres meses.',
+        notaClinica: 'Presión 128/82. Sin datos de alarma. Se revisaron los estudios previos.',
+        folio: 'K-1004',
+        folioReceta: 'RX-2401',
+        medicamentos: const [
+          MedicamentoLinea(
+            nombre: 'Losartán',
+            detalle: '50 mg · tableta · 1 cada 24 h · oral · 30 días',
+            indicacion: 'Por la mañana',
+          ),
+          MedicamentoLinea(
+            nombre: 'Ácido acetilsalicílico',
+            detalle: '100 mg · tableta · 1 cada 24 h · oral',
+            estatusEntrega: 'surtido',
+            evidenciaNombre: 'entrega-ana.pdf',
+            fechaEntrega: '2026-10-21T11:00:00',
+          ),
+        ],
+        ordenes: const [
+          OrdenEstudio(
+            id: 'o-ana-lab',
+            tipo: 'Laboratorio',
+            concepto: 'Química sanguínea',
+            indicacion: 'En ayuno',
+            lugar: 'Laboratorio Roma',
+            folio: 'LB-2026-014',
+            estatus: 'en_proceso',
+          ),
+          OrdenEstudio(
+            id: 'o-ana-gab',
+            tipo: 'Gabinete',
+            concepto: 'Electrocardiograma',
+            lugar: 'Gabinete Roma',
+            folio: 'GB-2026-008',
+          ),
+        ],
+      ),
+      ConsultaClinica(
+        id: 'k-bruno',
+        citaId: 'c-2',
+        pacienteId: 'p-bruno',
+        medicoId: 'm-3',
+        motivo: 'Dolor lumbar',
+        diagnostico: 'Lumbalgia mecánica',
+        plan: 'Analgesia y radiografía si no cede en una semana.',
+        notaClinica: 'Dolor al movimiento, sin déficit neurológico.',
+        folio: 'K-1002',
+        folioReceta: 'RX-2402',
+        medicamentos: const [
+          MedicamentoLinea(
+            nombre: 'Ibuprofeno',
+            detalle: '400 mg · tableta · 1 cada 8 h · oral · 5 días',
+            indicacion: 'Con alimentos',
+          ),
+        ],
+        ordenes: const [
+          OrdenEstudio(
+            id: 'o-bruno-gab',
+            tipo: 'Gabinete',
+            concepto: 'Radiografía lumbar',
+            indicacion: 'Dos proyecciones',
+            lugar: 'Gabinete del Valle',
+            folio: 'GB-2026-011',
+          ),
+        ],
+      ),
     ];
   }
 

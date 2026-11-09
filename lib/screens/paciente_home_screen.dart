@@ -5,6 +5,7 @@ import '../formato.dart';
 import '../state/consultorio_store.dart';
 import '../theme/sisco_theme.dart';
 import '../widgets/comun.dart';
+import 'expediente_clinico.dart';
 import 'expediente_screen.dart';
 
 class PacienteHomeScreen extends StatefulWidget {
@@ -113,6 +114,10 @@ class _PacienteHomeScreenState extends State<PacienteHomeScreen> {
             ),
             const SizedBox(height: 10),
             ..._citas(context, store, paciente.nombreCompleto, paciente.id),
+            const SizedBox(height: 8),
+            SeguimientoDerechohabiente(pacienteId: paciente.id),
+            const SizedBox(height: 12),
+            AvisoConsultorio(pacienteId: paciente.id),
           ],
         ],
       ),
@@ -136,8 +141,10 @@ class _PacienteHomeScreenState extends State<PacienteHomeScreen> {
           child: CitaTarjeta(
             cita: cita,
             paciente: nombre,
+            linea: store.lineaAgenda(cita),
+            medico: cita.medicoId.isEmpty ? '' : store.nombreMedico(cita.medicoId),
             meetListo: store.enlaceMeet(cita).isNotEmpty,
-            onMeet: () => crearOAbrirMeet(context, cita),
+            onMeet: cita.videollamada ? () => crearOAbrirMeet(context, cita) : null,
             onCat: () => llamarACat(context),
           ),
         ),
@@ -177,7 +184,7 @@ class _PacienteActivo extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('PACIENTE ACTIVO', style: TextStyle(color: cian, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.6)),
+                    const Text('DERECHOHABIENTE ACTIVO', style: TextStyle(color: cian, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.6)),
                     Text(nombre, style: const TextStyle(color: texto, fontSize: 18, fontWeight: FontWeight.w800)),
                     Text('Nº Expediente: $expediente', style: const TextStyle(color: suave, fontSize: 12)),
                   ],

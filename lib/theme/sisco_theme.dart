@@ -49,6 +49,18 @@ const gradienteAdmin = LinearGradient(
   colors: [Color(0xFF4338CA), Color(0xFF818CD3)],
 );
 
+const gradienteFarmacia = LinearGradient(
+  begin: Alignment.bottomLeft,
+  end: Alignment.topRight,
+  colors: [Color(0xFF9A3412), Color(0xFFEA580C)],
+);
+
+const gradienteLaboratorio = LinearGradient(
+  begin: Alignment.bottomLeft,
+  end: Alignment.topRight,
+  colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
+);
+
 const gradienteRecepcion = LinearGradient(
   begin: Alignment.bottomLeft,
   end: Alignment.topRight,
