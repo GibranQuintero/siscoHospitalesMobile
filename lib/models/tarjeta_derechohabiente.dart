@@ -9,6 +9,13 @@ class TarjetaDerechohabiente {
     required this.plan,
     required this.vigenciaHasta,
     required this.estado,
+    this.aseguradora = '',
+    this.afiliado = '',
+    this.tipoSangre = '',
+    this.alergias = '',
+    this.emergencia = '',
+    this.fechaNacimiento = '',
+    this.sexo = '',
   });
 
   final String titular;
@@ -20,7 +27,21 @@ class TarjetaDerechohabiente {
   /// `vigente`, `vencida` o `sin_poliza`.
   final String estado;
 
+  /// Aseguradora tal como viene en la ficha (vacía si no tiene póliza).
+  final String aseguradora;
+  final String afiliado;
+  final String tipoSangre;
+  final String alergias;
+
+  /// Primer contacto de emergencia: "Nombre · teléfono".
+  final String emergencia;
+  final String fechaNacimiento;
+  final String sexo;
+
   bool get cubierta => estado == 'vigente';
+
+  /// Texto del código QR con el que caja o recepción identifican al derechohabiente.
+  String get codigoIdentificacion => 'SISCO|$expediente|$numero|${aseguradora.isEmpty ? 'RED' : aseguradora}';
 
   factory TarjetaDerechohabiente.de(Paciente paciente, [DateTime? hoy]) {
     final seguro = paciente.seguros.where((item) => item.certificado.isNotEmpty || item.aseguradora.isNotEmpty).firstOrNull;
@@ -32,6 +53,15 @@ class TarjetaDerechohabiente {
       plan: seguro == null || seguro.aseguradora.isEmpty ? 'Red SISCO' : seguro.aseguradora,
       vigenciaHasta: seguro?.vigenciaHasta ?? '',
       estado: _estado(seguro, referencia),
+      aseguradora: seguro?.aseguradora ?? '',
+      afiliado: seguro != null && seguro.afiliado.isNotEmpty ? seguro.afiliado : '',
+      tipoSangre: paciente.tipoSangre,
+      alergias: paciente.alergias.join(', '),
+      emergencia: paciente.contactos.isEmpty
+          ? ''
+          : [paciente.contactos.first.nombre, paciente.contactos.first.telefono].where((x) => x.trim().isNotEmpty).join(' · '),
+      fechaNacimiento: paciente.fechaNacimiento,
+      sexo: paciente.sexo,
     );
   }
 }

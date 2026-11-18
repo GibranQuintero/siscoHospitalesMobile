@@ -18,18 +18,19 @@ class ConsultorioException implements Exception {
 class ApiConfig {
   static const clave = 'sisco_api_base';
 
-  static String porPlataforma() => 'http://$equipoLocal:5112/';
+  /// iOS (simulador) llega a SISCOAPI de la Mac por localhost; Android, por la IP de la computadora.
+  static String porPlataforma() => Platform.isIOS ? 'http://localhost:5112/' : 'http://$equipoLocal:5112/';
 
   static Future<String> leer() async {
     final prefs = await SharedPreferences.getInstance();
     final guardada = prefs.getString(clave);
     if (guardada == null || guardada.trim().isEmpty) return porPlataforma();
-    return hostEnEsteEquipo(guardada);
+    return hostEnEsteEquipo(guardada, esIos: Platform.isIOS);
   }
 
   static Future<void> guardar(String base) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(clave, hostEnEsteEquipo(base));
+    await prefs.setString(clave, hostEnEsteEquipo(base, esIos: Platform.isIOS));
   }
 
   static Future<void> olvidar() async {

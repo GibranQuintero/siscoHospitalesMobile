@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../formato.dart';
 import '../services/consultorio_api.dart';
 import '../state/consultorio_store.dart';
 import '../theme/sisco_theme.dart';
@@ -154,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 if (_conexion) ...[
                   Text(
-                    'El teléfono y esta computadora deben estar en la misma red. Los datos salen de http://$equipoLocal:5112/',
+                    'El teléfono y esta computadora deben estar en la misma red. Los datos salen de ${ApiConfig.porPlataforma()}',
                     style: const TextStyle(color: suave, height: 1.35, fontSize: 13),
                   ),
                   const SizedBox(height: 8),
