@@ -8,7 +8,9 @@ import '../widgets/comun.dart';
 import 'expediente_screen.dart';
 
 class PacienteHomeScreen extends StatefulWidget {
-  const PacienteHomeScreen({super.key});
+  const PacienteHomeScreen({super.key, required this.onWallet});
+
+  final VoidCallback onWallet;
 
   @override
   State<PacienteHomeScreen> createState() => _PacienteHomeScreenState();
@@ -96,6 +98,7 @@ class _PacienteHomeScreenState extends State<PacienteHomeScreen> {
               nombre: paciente.nombreCompleto,
               expediente: paciente.id,
               onExpediente: () => abrirExpediente(context, paciente.id),
+              onWallet: widget.onWallet,
               onCambiar: () => setState(() => _cambiando = true),
             ),
             const SizedBox(height: 18),
@@ -151,6 +154,7 @@ class _PacienteActivo extends StatelessWidget {
     required this.nombre,
     required this.expediente,
     required this.onExpediente,
+    required this.onWallet,
     required this.onCambiar,
   });
 
@@ -158,6 +162,7 @@ class _PacienteActivo extends StatelessWidget {
   final String nombre;
   final String expediente;
   final VoidCallback onExpediente;
+  final VoidCallback onWallet;
   final VoidCallback onCambiar;
 
   @override
@@ -191,6 +196,13 @@ class _PacienteActivo extends StatelessWidget {
             texto: 'Ver mi expediente médico',
             icono: Icons.folder_shared_outlined,
             onPressed: onExpediente,
+            expandir: true,
+          ),
+          const SizedBox(height: 8),
+          BotonPastilla(
+            texto: 'Mi tarjeta de derechohabiente',
+            icono: Icons.account_balance_wallet_outlined,
+            onPressed: onWallet,
             expandir: true,
           ),
         ],

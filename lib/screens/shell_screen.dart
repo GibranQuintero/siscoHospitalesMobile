@@ -11,6 +11,7 @@ import 'paciente_home_screen.dart';
 import 'pacientes_screen.dart';
 import 'recepcion_inicio_screen.dart';
 import 'recepcion_llegadas_screen.dart';
+import 'wallet_screen.dart';
 
 class _BarraUnica extends StatelessWidget {
   const _BarraUnica({required this.destino});
@@ -98,7 +99,10 @@ class _ShellScreenState extends State<ShellScreen> {
   List<Widget> _pantallas(ModuloApp modulo) {
     switch (modulo) {
       case ModuloApp.paciente:
-        return const [PacienteHomeScreen()];
+        return [
+          PacienteHomeScreen(onWallet: () => setState(() => _indice = 1)),
+          const WalletScreen(),
+        ];
       case ModuloApp.doctor:
         return [
           InicioScreen(onVerAgenda: () => setState(() => _indice = 1)),
@@ -127,6 +131,7 @@ class _ShellScreenState extends State<ShellScreen> {
       case ModuloApp.paciente:
         return const [
           NavigationDestination(icon: Icon(Icons.event_note_outlined), selectedIcon: Icon(Icons.event_note), label: 'Mis citas'),
+          NavigationDestination(icon: Icon(Icons.account_balance_wallet_outlined), selectedIcon: Icon(Icons.account_balance_wallet), label: 'Wallet'),
         ];
       case ModuloApp.doctor:
         return const [

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sisco_hospitales_mobile/formato.dart';
 import 'package:sisco_hospitales_mobile/models/consultorio.dart';
+import 'package:sisco_hospitales_mobile/models/tarjeta_derechohabiente.dart';
 import 'package:sisco_hospitales_mobile/services/sesion.dart';
 
 void main() {
@@ -20,6 +21,43 @@ void main() {
     });
     expect(paciente.nombreCompleto, 'Ana López Ruiz');
     expect(paciente.alergias, ['Penicilina']);
+  });
+
+  test('arma la tarjeta de derechohabiente desde la póliza', () {
+    final paciente = Paciente.fromJson({
+      'id': 'p-ana',
+      'nombre': 'Ana',
+      'apellido': 'Ríos',
+      'seguros': [
+        {'aseguradora': 'Seguro ejemplo', 'certificado': 'PX-1001', 'vigenciaHasta': '2027-12-31'},
+      ],
+    });
+    final tarjeta = TarjetaDerechohabiente.de(paciente, DateTime(2026, 11, 18));
+    expect(tarjeta.titular, 'Ana Ríos');
+    expect(tarjeta.numero, 'PX-1001');
+    expect(tarjeta.estado, 'vigente');
+    expect(etiquetaTarjeta(tarjeta.estado), 'Vigente');
+  });
+
+  test('marca vencida una póliza pasada y usa el expediente sin póliza', () {
+    final vencida = TarjetaDerechohabiente.de(
+      Paciente.fromJson({
+        'id': 'p-bruno',
+        'nombre': 'Bruno',
+        'apellido': 'Salas',
+        'seguro': {'aseguradora': 'Seguro ejemplo', 'certificado': 'PX-1002', 'vigenciaHasta': '2026-11-17'},
+      }),
+      DateTime(2026, 11, 18),
+    );
+    expect(vencida.estado, 'vencida');
+
+    final sinPoliza = TarjetaDerechohabiente.de(
+      Paciente.fromJson({'id': 'p-clara', 'nombre': 'Clara', 'apellido': 'Nieto'}),
+      DateTime(2026, 11, 18),
+    );
+    expect(sinPoliza.numero, 'p-clara');
+    expect(sinPoliza.plan, 'Red SISCO');
+    expect(sinPoliza.estado, 'sin_poliza');
   });
 
   test('lee la cita con la hora del consultorio', () {
