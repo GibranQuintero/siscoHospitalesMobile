@@ -106,6 +106,9 @@ void main() {
     expect(hostEnEsteEquipo('http://127.0.0.1:5112/'), 'http://172.16.21.170:5112/');
     expect(hostEnEsteEquipo('http://10.0.2.2:5112/'), 'http://172.16.21.170:5112/');
     expect(hostEnEsteEquipo('localhost:5112'), 'http://172.16.21.170:5112/');
+    // En iOS (simulador) localhost es la Mac: se respeta.
+    expect(hostEnEsteEquipo('localhost:5112', esIos: true), 'http://localhost:5112/');
+    expect(hostEnEsteEquipo('http://127.0.0.1:5112/', esIos: true), 'http://127.0.0.1:5112/');
   });
 
   test('la agenda arma la misma línea que la web', () {

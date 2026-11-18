@@ -47,8 +47,8 @@ class _AjustesScreenState extends State<AjustesScreen> {
         children: [
           const Text('Dirección de SISCOAPI', style: TextStyle(color: marino, fontSize: 18, fontWeight: FontWeight.w800)),
           const SizedBox(height: 8),
-          const Text(
-            'El consultorio móvil lee los mismos controladores que la web. En un teléfono, esta computadora es http://172.16.21.170:5112/. El teléfono tiene que estar en la misma red Wi-Fi.',
+          Text(
+            'El consultorio móvil lee los mismos controladores que la web. En este dispositivo, la computadora es $sugerida. El teléfono tiene que estar en la misma red Wi-Fi.',
             style: TextStyle(color: suave, height: 1.4),
           ),
           const SizedBox(height: 16),

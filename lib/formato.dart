@@ -130,11 +130,13 @@ String normalizarBase(String raw) {
 
 const equipoLocal = '172.16.21.170';
 
-String hostEnEsteEquipo(String base) {
+/// En el simulador de iOS, localhost es la Mac donde corre SISCOAPI: no se reescribe.
+/// En Android (emulador o teléfono) localhost no llega a la computadora y se cambia por [equipoLocal].
+String hostEnEsteEquipo(String base, {bool esIos = false}) {
   final normal = normalizarBase(base);
   final uri = Uri.tryParse(normal);
   if (uri == null) return normal;
-  const locales = {'localhost', '127.0.0.1', '10.0.2.2'};
+  final locales = esIos ? const {'10.0.2.2'} : const {'localhost', '127.0.0.1', '10.0.2.2'};
   if (locales.contains(uri.host)) {
     return uri.replace(host: equipoLocal).toString();
   }
