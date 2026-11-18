@@ -53,16 +53,30 @@ class ModulosScreen extends StatelessWidget {
                 _ModuloTarjeta(
                   gradiente: gradientePaciente,
                   icono: Icons.person_outline,
-                  titulo: 'Pacientes',
-                  detalle: 'Citas programadas, Meet, llamada a CAT y tu expediente.',
+                  titulo: 'Derechohabientes',
+                  detalle: 'Citas, Meet, tus medicamentos y estudios, y un aviso al consultorio.',
                   onTap: () => store.elegirModulo(ModuloApp.paciente),
                 ),
                 _ModuloTarjeta(
                   gradiente: gradienteDoctor,
                   icono: Icons.medical_services_outlined,
                   titulo: 'Doctores',
-                  detalle: 'Agenda del día, expedientes y la consulta en curso.',
+                  detalle: 'Agenda del día y expediente clínico de lectura.',
                   onTap: () => store.elegirModulo(ModuloApp.doctor),
+                ),
+                _ModuloTarjeta(
+                  gradiente: gradienteFarmacia,
+                  icono: Icons.medication_outlined,
+                  titulo: 'Farmacia',
+                  detalle: 'Aprueba el surtido de cada medicamento y adjunta la evidencia.',
+                  onTap: () => store.elegirModulo(ModuloApp.farmacia),
+                ),
+                _ModuloTarjeta(
+                  gradiente: gradienteLaboratorio,
+                  icono: Icons.biotech_outlined,
+                  titulo: 'Laboratorio - Gabinete',
+                  detalle: 'Aprueba estudios, escribe el resultado y sube la evidencia.',
+                  onTap: () => store.elegirModulo(ModuloApp.laboratorio),
                 ),
                 _ModuloTarjeta(
                   gradiente: gradienteRecepcion,

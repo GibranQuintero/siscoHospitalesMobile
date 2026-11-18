@@ -7,7 +7,7 @@ import '../models/consultorio.dart';
 import '../services/consultorio_api.dart';
 import '../services/sesion.dart';
 
-enum ModuloApp { paciente, doctor, recepcion, admin }
+enum ModuloApp { paciente, doctor, recepcion, admin, farmacia, laboratorio }
 
 ModuloApp? moduloDe(String valor) {
   switch (valor) {
@@ -19,6 +19,10 @@ ModuloApp? moduloDe(String valor) {
       return ModuloApp.recepcion;
     case 'admin':
       return ModuloApp.admin;
+    case 'farmacia':
+      return ModuloApp.farmacia;
+    case 'laboratorio':
+      return ModuloApp.laboratorio;
   }
   return null;
 }
@@ -33,19 +37,27 @@ String claveModulo(ModuloApp modulo) {
       return 'recepcion';
     case ModuloApp.admin:
       return 'admin';
+    case ModuloApp.farmacia:
+      return 'farmacia';
+    case ModuloApp.laboratorio:
+      return 'laboratorio';
   }
 }
 
 String tituloModulo(ModuloApp modulo) {
   switch (modulo) {
     case ModuloApp.paciente:
-      return 'Pacientes';
+      return 'Derechohabientes';
     case ModuloApp.doctor:
       return 'Doctores';
     case ModuloApp.recepcion:
       return 'Recepción';
     case ModuloApp.admin:
       return 'Administración';
+    case ModuloApp.farmacia:
+      return 'Farmacia';
+    case ModuloApp.laboratorio:
+      return 'Laboratorio';
   }
 }
 
@@ -101,6 +113,8 @@ class ConsultorioStore extends ChangeNotifier {
   List<HospitalRed> hospitales = [];
   List<Medico> medicos = [];
   List<Mensaje> mensajes = [];
+  List<ConsultaClinica> consultas = [];
+  List<ExpedienteClinico> expedientes = [];
   Map<String, String> catalogoEspecialidad = {};
 
   String get titulo {
@@ -183,7 +197,7 @@ class ConsultorioStore extends ChangeNotifier {
     _avisar();
   }
 
-  void _llenarPrueba() {
+  void _llenarPrueba({bool conservarOperacion = false}) {
     cuenta = 'SISCO Servicios Médicos';
     clinica = 'Consultorio Roma';
     cuentaTelefono = '5550000000';
@@ -194,8 +208,12 @@ class ConsultorioStore extends ChangeNotifier {
     citas = DatosPrueba.citas();
     hospitales = DatosPrueba.hospitales();
     medicos = DatosPrueba.medicos();
-    mensajes = DatosPrueba.mensajes();
     catalogoEspecialidad = DatosPrueba.especialidades();
+    if (!conservarOperacion) {
+      mensajes = DatosPrueba.mensajes();
+      consultas = DatosPrueba.consultas();
+      expedientes = DatosPrueba.expedientes();
+    }
   }
 
   Future<void> entrar(String email, String password) async {
@@ -234,6 +252,8 @@ class ConsultorioStore extends ChangeNotifier {
     hospitales = [];
     medicos = [];
     mensajes = [];
+    consultas = [];
+    expedientes = [];
     error = null;
     _avisar();
   }
@@ -279,7 +299,7 @@ class ConsultorioStore extends ChangeNotifier {
     if (demostracion) {
       cargando = true;
       _avisar();
-      _llenarPrueba();
+      _llenarPrueba(conservarOperacion: true);
       cargando = false;
       _avisar();
       return;
@@ -316,6 +336,8 @@ class ConsultorioStore extends ChangeNotifier {
           medicos = lista(json['medicos'], Medico.fromJson)..sort((a, b) => a.nombreCompleto.compareTo(b.nombreCompleto));
         },
       );
+      consultas = [];
+      expedientes = [];
     } on ConsultorioException catch (e) {
       error = e.mensaje;
     } catch (_) {
@@ -353,7 +375,163 @@ class ConsultorioStore extends ChangeNotifier {
     return null;
   }
 
-  String nombrePaciente(String id) => porId(id)?.nombreCompleto ?? 'Paciente';
+  String nombrePaciente(String id) => porId(id)?.nombreCompleto ?? 'Derechohabiente';
+
+  String nombreMedico(String id) {
+    for (final medico in medicos) {
+      if (medico.id == id) return medico.nombreCompleto;
+    }
+    return 'Médico sin registrar';
+  }
+
+  /// Misma línea de la agenda web: afiliación · folio de consulta · región.
+  String lineaAgenda(Cita cita) {
+    final paciente = porId(cita.pacienteId);
+    final afiliacion = (paciente?.afiliacion ?? '').isEmpty ? 'Sin afiliación' : paciente!.afiliacion;
+    final region = paciente?.regionAgenda ?? 'Sin región';
+    return '$afiliacion · ${folioConsulta(cita)} · $region';
+  }
+
+  String folioConsulta(Cita cita) {
+    for (final consulta in consultas) {
+      if (consulta.citaId == cita.id && consulta.folio.trim().isNotEmpty) return consulta.folio;
+    }
+    if (cita.folio.trim().isNotEmpty) return cita.folio;
+    return 'Sin folio';
+  }
+
+  List<Cita> get llamadasPendientes {
+    return citas.where((cita) => cita.sinHospital && cita.estado != 'cancelada').toList();
+  }
+
+  List<String> get sedesAgenda {
+    final nombres = <String>{};
+    for (final hospital in hospitales) {
+      if (hospital.nombre.trim().isNotEmpty) nombres.add(hospital.nombre.trim());
+    }
+    for (final cita in citas) {
+      if (cita.clinica.trim().isNotEmpty) nombres.add(cita.clinica.trim());
+    }
+    final lista = nombres.toList()..sort();
+    return lista;
+  }
+
+  ExpedienteClinico? expedienteDe(String pacienteId) {
+    for (final expediente in expedientes) {
+      if (expediente.pacienteId == pacienteId) return expediente;
+    }
+    return null;
+  }
+
+  List<ConsultaClinica> consultasDe(String pacienteId) {
+    return consultas.where((consulta) => consulta.pacienteId == pacienteId).toList();
+  }
+
+  void dejarMensaje(String pacienteId, String texto) {
+    final limpio = texto.trim();
+    if (pacienteId.isEmpty || limpio.isEmpty) return;
+    mensajes = [
+      Mensaje(
+        id: 'msg-${DateTime.now().microsecondsSinceEpoch}',
+        pacienteId: pacienteId,
+        texto: limpio,
+        de: 'paciente',
+        cuando: DateTime.now(),
+      ),
+      ...mensajes,
+    ];
+    _avisar();
+  }
+
+  void marcarMedicamento(String consultaId, int indice, String estatus) {
+    _editarConsulta(consultaId, (consulta) {
+      if (indice < 0 || indice >= consulta.medicamentos.length) return consulta;
+      final actual = consulta.medicamentos[indice];
+      final clave = estatus == 'entregado' ? 'surtido' : estatus;
+      final lineas = List<MedicamentoLinea>.of(consulta.medicamentos);
+      lineas[indice] = actual.copiar(
+        estatusEntrega: clave,
+        fechaEntrega: clave == 'pendiente' ? '' : (actual.fechaEntrega.isNotEmpty ? actual.fechaEntrega : DateTime.now().toIso8601String()),
+      );
+      return consulta.copiar(medicamentos: lineas);
+    });
+  }
+
+  void anotarMedicamento(String consultaId, int indice, String nota) {
+    _editarConsulta(consultaId, (consulta) {
+      if (indice < 0 || indice >= consulta.medicamentos.length) return consulta;
+      final lineas = List<MedicamentoLinea>.of(consulta.medicamentos);
+      lineas[indice] = lineas[indice].copiar(notaSurtido: nota.trim());
+      return consulta.copiar(medicamentos: lineas);
+    });
+  }
+
+  void evidenciarMedicamento(String consultaId, int indice, String nombre) {
+    final archivo = nombre.trim();
+    if (archivo.isEmpty) return;
+    _editarConsulta(consultaId, (consulta) {
+      if (indice < 0 || indice >= consulta.medicamentos.length) return consulta;
+      final lineas = List<MedicamentoLinea>.of(consulta.medicamentos);
+      lineas[indice] = lineas[indice].copiar(evidenciaNombre: archivo);
+      return consulta.copiar(medicamentos: lineas);
+    });
+  }
+
+  void actualizarOrden(String consultaId, String ordenId, {String? estatus, String? resultado, String? evidenciaNombre}) {
+    _editarConsulta(consultaId, (consulta) {
+      final ordenes = [
+        for (final orden in consulta.ordenes)
+          if (orden.id != ordenId)
+            orden
+          else
+            orden.copiar(
+              estatus: estatus,
+              resultado: resultado,
+              evidenciaNombre: evidenciaNombre,
+              fechaResultado: estatus == 'resultado' && orden.fechaResultado.isEmpty ? DateTime.now().toIso8601String() : null,
+            ),
+      ];
+      return consulta.copiar(ordenes: ordenes);
+    });
+  }
+
+  void aprobarOrden(String consultaId, String ordenId) {
+    for (final consulta in consultas) {
+      if (consulta.id != consultaId) continue;
+      for (final orden in consulta.ordenes) {
+        if (orden.id != ordenId) continue;
+        actualizarOrden(consultaId, ordenId, estatus: orden.estatus == 'pendiente' ? 'recibida' : 'en_proceso');
+        return;
+      }
+    }
+  }
+
+  void guardarResultadoOrden(String consultaId, String ordenId, String resultado) {
+    final texto = resultado.trim();
+    var conEvidencia = false;
+    for (final consulta in consultas) {
+      if (consulta.id != consultaId) continue;
+      for (final orden in consulta.ordenes) {
+        if (orden.id == ordenId) conEvidencia = orden.evidenciaNombre.isNotEmpty;
+      }
+    }
+    actualizarOrden(consultaId, ordenId, resultado: texto, estatus: texto.isNotEmpty || conEvidencia ? 'resultado' : null);
+  }
+
+  void evidenciarOrden(String consultaId, String ordenId, String nombre) {
+    final archivo = nombre.trim();
+    if (archivo.isEmpty) return;
+    actualizarOrden(consultaId, ordenId, evidenciaNombre: archivo, estatus: 'resultado');
+  }
+
+  void _editarConsulta(String id, ConsultaClinica Function(ConsultaClinica) cambiar) {
+    final indice = consultas.indexWhere((consulta) => consulta.id == id);
+    if (indice < 0) return;
+    final copia = List<ConsultaClinica>.of(consultas);
+    copia[indice] = cambiar(copia[indice]);
+    consultas = copia;
+    _avisar();
+  }
 
   HospitalRed? hospitalPorId(String id) {
     for (final hospital in hospitales) {
@@ -438,4 +616,4 @@ class ConsultorioStore extends ChangeNotifier {
   }
 }
 
-const _ruido = {'pacientes', 'paciente', 'con', 'que', 'tienen', 'de'};
+const _ruido = {'pacientes', 'paciente', 'derechohabientes', 'derechohabiente', 'con', 'que', 'tienen', 'de'};

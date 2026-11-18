@@ -61,6 +61,7 @@ class Paciente {
     required this.alergias,
     required this.seguros,
     required this.contactos,
+    this.regionIndep = '',
   });
 
   final String id;
@@ -79,10 +80,20 @@ class Paciente {
   final List<String> alergias;
   final List<SeguroPaciente> seguros;
   final List<ContactoEmergencia> contactos;
+  final String regionIndep;
 
   String get nombreCompleto {
     return [nombre, apellido, segundoApellido].where((parte) => parte.trim().isNotEmpty).join(' ');
   }
+
+  String get afiliacion {
+    for (final seguro in seguros) {
+      if (seguro.afiliado.trim().isNotEmpty) return seguro.afiliado.trim();
+    }
+    return '';
+  }
+
+  String get regionAgenda => regionIndep.trim().isEmpty ? 'Sin región' : regionIndep.trim();
 
   factory Paciente.fromJson(Map<String, dynamic> json) {
     final antecedentes = mapa(json['antecedentes']);
@@ -117,6 +128,7 @@ class Paciente {
       alergias: alergias,
       seguros: seguros,
       contactos: lista(json['contactosEmergencia'], ContactoEmergencia.fromJson),
+      regionIndep: cadena(json['regionIndep']).isNotEmpty ? cadena(json['regionIndep']) : cadena(json['region']),
     );
   }
 }
@@ -135,6 +147,11 @@ class Cita {
     required this.videollamadaUrl,
     required this.pacienteNuevo,
     required this.folio,
+    this.tipoServicio = 'Médico general',
+    this.medicoId = '',
+    this.etiquetas = '',
+    this.origen = '',
+    this.creadoPor = '',
   });
 
   final String id;
@@ -149,8 +166,16 @@ class Cita {
   final String videollamadaUrl;
   final bool pacienteNuevo;
   final String folio;
+  final String tipoServicio;
+  final String medicoId;
+  final String etiquetas;
+  final String origen;
+  final String creadoPor;
+
+  bool get sinHospital => clinica.trim().isEmpty;
 
   factory Cita.fromJson(Map<String, dynamic> json) {
+    final origen = cadena(json['origen']);
     return Cita(
       id: cadena(json['id']),
       pacienteId: cadena(json['pacienteId']),
@@ -164,6 +189,11 @@ class Cita {
       videollamadaUrl: cadena(json['videollamadaUrl']),
       pacienteNuevo: bandera(json['pacienteNuevo']),
       folio: cadena(json['folio']),
+      tipoServicio: cadena(json['tipoServicio']).isEmpty ? 'Médico general' : cadena(json['tipoServicio']),
+      medicoId: cadena(json['medicoId']),
+      etiquetas: cadena(json['etiquetas']),
+      origen: origen == 'llamada' || origen == 'agenda' ? origen : '',
+      creadoPor: cadena(json['creadoPor']),
     );
   }
 
@@ -181,6 +211,11 @@ class Cita {
       videollamadaUrl: videollamadaUrl,
       pacienteNuevo: pacienteNuevo,
       folio: folio,
+      tipoServicio: tipoServicio,
+      medicoId: medicoId,
+      etiquetas: etiquetas,
+      origen: origen,
+      creadoPor: creadoPor,
     );
   }
 }
@@ -307,6 +342,178 @@ class Mensaje {
       texto: cadena(json['texto']),
       de: cadena(json['de']).isNotEmpty ? cadena(json['de']) : cadena(json['origen']),
       cuando: fechaHora(json['cuando']),
+    );
+  }
+}
+
+class Antecedente {
+  const Antecedente({required this.titulo, required this.detalle});
+
+  final String titulo;
+  final String detalle;
+}
+
+class ArchivoExpediente {
+  const ArchivoExpediente({required this.nombre, required this.fecha});
+
+  final String nombre;
+  final String fecha;
+}
+
+class ConsentimientoRegistro {
+  const ConsentimientoRegistro({required this.nombre, required this.fecha, required this.firmado});
+
+  final String nombre;
+  final String fecha;
+  final bool firmado;
+}
+
+class ExpedienteClinico {
+  const ExpedienteClinico({
+    required this.pacienteId,
+    required this.antecedentes,
+    required this.archivos,
+    required this.consentimientos,
+  });
+
+  final String pacienteId;
+  final List<Antecedente> antecedentes;
+  final List<ArchivoExpediente> archivos;
+  final List<ConsentimientoRegistro> consentimientos;
+}
+
+class MedicamentoLinea {
+  const MedicamentoLinea({
+    required this.nombre,
+    this.detalle = '',
+    this.indicacion = '',
+    this.estatusEntrega = 'pendiente',
+    this.notaSurtido = '',
+    this.evidenciaNombre = '',
+    this.fechaEntrega = '',
+  });
+
+  final String nombre;
+  final String detalle;
+  final String indicacion;
+  final String estatusEntrega;
+  final String notaSurtido;
+  final String evidenciaNombre;
+  final String fechaEntrega;
+
+  bool get pendiente => estatusEntrega != 'surtido' && estatusEntrega != 'entregado' && estatusEntrega != 'no_surtido';
+
+  MedicamentoLinea copiar({
+    String? estatusEntrega,
+    String? notaSurtido,
+    String? evidenciaNombre,
+    String? fechaEntrega,
+  }) {
+    return MedicamentoLinea(
+      nombre: nombre,
+      detalle: detalle,
+      indicacion: indicacion,
+      estatusEntrega: estatusEntrega ?? this.estatusEntrega,
+      notaSurtido: notaSurtido ?? this.notaSurtido,
+      evidenciaNombre: evidenciaNombre ?? this.evidenciaNombre,
+      fechaEntrega: fechaEntrega ?? this.fechaEntrega,
+    );
+  }
+}
+
+class OrdenEstudio {
+  const OrdenEstudio({
+    required this.id,
+    required this.tipo,
+    required this.concepto,
+    this.indicacion = '',
+    this.lugar = '',
+    this.folio = '',
+    this.estatus = 'pendiente',
+    this.resultado = '',
+    this.evidenciaNombre = '',
+    this.fechaResultado = '',
+  });
+
+  final String id;
+  final String tipo;
+  final String concepto;
+  final String indicacion;
+  final String lugar;
+  final String folio;
+  final String estatus;
+  final String resultado;
+  final String evidenciaNombre;
+  final String fechaResultado;
+
+  bool get cerrada => estatus == 'resultado' || estatus == 'cancelada';
+
+  OrdenEstudio copiar({
+    String? estatus,
+    String? resultado,
+    String? evidenciaNombre,
+    String? fechaResultado,
+  }) {
+    return OrdenEstudio(
+      id: id,
+      tipo: tipo,
+      concepto: concepto,
+      indicacion: indicacion,
+      lugar: lugar,
+      folio: folio,
+      estatus: estatus ?? this.estatus,
+      resultado: resultado ?? this.resultado,
+      evidenciaNombre: evidenciaNombre ?? this.evidenciaNombre,
+      fechaResultado: fechaResultado ?? this.fechaResultado,
+    );
+  }
+}
+
+class ConsultaClinica {
+  const ConsultaClinica({
+    required this.id,
+    required this.citaId,
+    required this.pacienteId,
+    required this.medicoId,
+    required this.motivo,
+    required this.diagnostico,
+    required this.plan,
+    required this.notaClinica,
+    this.folio = '',
+    this.folioReceta = '',
+    this.medicamentos = const [],
+    this.ordenes = const [],
+  });
+
+  final String id;
+  final String citaId;
+  final String pacienteId;
+  final String medicoId;
+  final String motivo;
+  final String diagnostico;
+  final String plan;
+  final String notaClinica;
+  final String folio;
+  final String folioReceta;
+  final List<MedicamentoLinea> medicamentos;
+  final List<OrdenEstudio> ordenes;
+
+  bool get recetaCerrada => medicamentos.isNotEmpty && medicamentos.every((linea) => !linea.pendiente);
+
+  ConsultaClinica copiar({List<MedicamentoLinea>? medicamentos, List<OrdenEstudio>? ordenes}) {
+    return ConsultaClinica(
+      id: id,
+      citaId: citaId,
+      pacienteId: pacienteId,
+      medicoId: medicoId,
+      motivo: motivo,
+      diagnostico: diagnostico,
+      plan: plan,
+      notaClinica: notaClinica,
+      folio: folio,
+      folioReceta: folioReceta,
+      medicamentos: medicamentos ?? this.medicamentos,
+      ordenes: ordenes ?? this.ordenes,
     );
   }
 }

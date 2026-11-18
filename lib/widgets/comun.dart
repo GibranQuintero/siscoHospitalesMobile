@@ -148,10 +148,22 @@ class BotonPastilla extends StatelessWidget {
 }
 
 class CitaTarjeta extends StatelessWidget {
-  const CitaTarjeta({super.key, required this.cita, required this.paciente, this.onTap, this.onMeet, this.onCat, this.meetListo = false});
+  const CitaTarjeta({
+    super.key,
+    required this.cita,
+    required this.paciente,
+    this.linea = '',
+    this.medico = '',
+    this.onTap,
+    this.onMeet,
+    this.onCat,
+    this.meetListo = false,
+  });
 
   final Cita cita;
   final String paciente;
+  final String linea;
+  final String medico;
   final VoidCallback? onTap;
   final VoidCallback? onMeet;
   final VoidCallback? onCat;
@@ -160,6 +172,7 @@ class CitaTarjeta extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final inicio = cita.inicio;
+    final sede = cita.sinHospital ? 'Sin consultorio - hospital' : cita.clinica;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -198,18 +211,29 @@ class CitaTarjeta extends StatelessWidget {
                             EstadoChip(estado: cita.estado),
                           ],
                         ),
+                        if (linea.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(linea, style: const TextStyle(color: azul, fontSize: 12, fontWeight: FontWeight.w600)),
+                        ],
+                        if (cita.tipoServicio.isNotEmpty || medico.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            [cita.tipoServicio, if (medico.isNotEmpty) medico].where((parte) => parte.isNotEmpty).join(' · '),
+                            style: const TextStyle(color: gris, fontSize: 13),
+                          ),
+                        ],
                         if (cita.motivo.isNotEmpty) ...[
                           const SizedBox(height: 2),
                           Text(cita.motivo, style: const TextStyle(color: gris, fontSize: 13)),
                         ],
-                        if (cita.clinica.isNotEmpty) ...[
+                        if (sede.isNotEmpty) ...[
                           const SizedBox(height: 2),
-                          Text(cita.clinica, style: const TextStyle(color: suave, fontSize: 12)),
+                          Text(sede, style: const TextStyle(color: suave, fontSize: 12)),
                         ],
                         if (cita.pacienteNuevo)
                           const Padding(
                             padding: EdgeInsets.only(top: 4),
-                            child: Text('Nuevo', style: TextStyle(color: acero, fontSize: 12, fontWeight: FontWeight.w700)),
+                            child: Text('Derechohabiente nuevo', style: TextStyle(color: acero, fontSize: 12, fontWeight: FontWeight.w700)),
                           ),
                       ],
                     ),

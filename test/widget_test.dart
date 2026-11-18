@@ -9,7 +9,7 @@ void main() {
     await tester.pumpWidget(const SiscoApp(autoCargar: false, omitirLogin: true));
     expect(find.text('Elige un módulo'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('Administración'));
+    await tester.scrollUntilVisible(find.text('Administración'), 200);
     await tester.tap(find.text('Administración'));
     await tester.pump();
     await tester.pump();
@@ -27,7 +27,7 @@ void main() {
     await tester.pump();
     expect(find.text('Elige un módulo'), findsOneWidget);
 
-    await tester.tap(find.text('Pacientes'));
+    await tester.tap(find.text('Derechohabientes'));
     await tester.pump();
     await tester.pump();
     expect(tester.takeException(), isNull);
@@ -54,5 +54,25 @@ void main() {
     await tester.pump();
     expect(find.text('Confirmar cita'), findsNothing);
     expect(find.text('Cita confirmada'), findsOneWidget);
+  });
+
+  testWidgets('farmacia abre la receta local', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const SiscoApp(autoCargar: false));
+    await tester.tap(find.text('Iniciar sesión'));
+    await tester.pumpAndSettle();
+
+    final tarjeta = find.text('Aprueba el surtido de cada medicamento y adjunta la evidencia.');
+    await tester.scrollUntilVisible(tarjeta, 200);
+    await tester.tap(tarjeta);
+    await tester.pumpAndSettle();
+    expect(find.text('Abrir receta'), findsWidgets);
+
+    await tester.tap(find.text('Abrir receta').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Losartán'), findsOneWidget);
+    expect(find.text('Subir evidencia'), findsWidgets);
   });
 }

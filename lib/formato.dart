@@ -141,14 +141,41 @@ String hostEnEsteEquipo(String base) {
   return normal;
 }
 
+String etiquetaSurtido(String estado) {
+  switch (estado) {
+    case 'surtido':
+    case 'entregado':
+      return 'Surtido';
+    case 'no_surtido':
+      return 'No surtido';
+    default:
+      return 'Pendiente';
+  }
+}
+
+String etiquetaOrden(String estado) {
+  switch (estado) {
+    case 'recibida':
+      return 'Aprobada';
+    case 'en_proceso':
+      return 'En proceso';
+    case 'resultado':
+      return 'Con evidencia';
+    case 'cancelada':
+      return 'Cancelada';
+    default:
+      return 'Pendiente';
+  }
+}
+
 String etiquetaEstado(String estado) {
   const mapa = {
-    'no_confirmada': 'Por confirmar',
+    'no_confirmada': 'No confirmada',
     'confirmada': 'Confirmada',
     'en_consulta': 'En consulta',
     'terminada': 'Terminada',
     'cancelada': 'Cancelada',
-    'inasistencia': 'No se presentó',
+    'inasistencia': 'Inasistencia',
   };
   return mapa[estado] ?? estado.replaceAll('_', ' ');
 }
