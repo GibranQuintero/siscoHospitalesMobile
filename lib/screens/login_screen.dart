@@ -38,8 +38,29 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _entrar() {
-    ConsultorioScope.of(context).entrarSinRed();
+  Future<void> _entrar() async {
+    final store = ConsultorioScope.of(context);
+    if (store.demostracion) {
+      store.entrarSinRed();
+      return;
+    }
+    setState(() {
+      _entrando = true;
+      _error = null;
+    });
+    try {
+      if (_conexion && _api.text.trim().isNotEmpty) {
+        await ApiConfig.guardar(_api.text);
+      }
+      if (!mounted) return;
+      await ConsultorioScope.of(context).entrar(_email.text, _password.text);
+    } on ConsultorioException catch (e) {
+      if (mounted) setState(() => _error = e.mensaje);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'No se pudo entrar a SISCO.');
+    } finally {
+      if (mounted) setState(() => _entrando = false);
+    }
   }
 
   void _aviso(String texto) {
@@ -153,7 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 if (_conexion) ...[
                   Text(
-                    'El teléfono y esta computadora deben estar en la misma red. Los datos salen de ${ApiConfig.porPlataforma()}',
+                    'Los datos salen de producción (${ApiConfig.porPlataforma()}) con el contrato 651 - UMO220706N63 - 305.',
                     style: const TextStyle(color: suave, height: 1.35, fontSize: 13),
                   ),
                   const SizedBox(height: 8),

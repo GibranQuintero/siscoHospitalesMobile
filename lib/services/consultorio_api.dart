@@ -18,14 +18,17 @@ class ConsultorioException implements Exception {
 class ApiConfig {
   static const clave = 'sisco_api_base';
 
-  /// iOS (simulador) llega a SISCOAPI de la Mac por localhost; Android, por la IP de la computadora.
-  static String porPlataforma() => Platform.isIOS ? 'http://localhost:5112/' : 'http://$equipoLocal:5112/';
+  /// Producción: https://api.centraldeoperaciones.com/api/
+  static String porPlataforma() => apiProduccion;
 
   static Future<String> leer() async {
     final prefs = await SharedPreferences.getInstance();
     final guardada = prefs.getString(clave);
     if (guardada == null || guardada.trim().isEmpty) return porPlataforma();
-    return hostEnEsteEquipo(guardada, esIos: Platform.isIOS);
+    final normal = hostEnEsteEquipo(guardada, esIos: Platform.isIOS);
+    final uri = Uri.tryParse(normal);
+    if (uri == null || esDireccionLocal(uri.host)) return porPlataforma();
+    return normal;
   }
 
   static Future<void> guardar(String base) async {
@@ -62,13 +65,15 @@ class ConsultorioApi {
   final String origen;
   final Map<String, String> cabeceras;
 
+  Map<String, String> get _cabeceras => {...cabeceras, 'x-contrato': contratoProduccion};
+
   Future<String> crearMeet({String? folio, String? inicio, String? fin, String? resumen}) async {
     final uri = Uri.parse('${origen}api/llamada/consultorio');
     try {
       final respuesta = await http
           .post(
             uri,
-            headers: {...cabeceras, 'Content-Type': 'application/json'},
+            headers: {..._cabeceras, 'Content-Type': 'application/json'},
             body: jsonEncode({'folio': folio, 'inicio': inicio, 'fin': fin, 'resumen': resumen}),
           )
           .timeout(const Duration(seconds: 25));
@@ -97,7 +102,7 @@ class ConsultorioApi {
       final respuesta = await http
           .post(
             uri,
-            headers: {...cabeceras, 'Content-Type': 'application/json'},
+            headers: {..._cabeceras, 'Content-Type': 'application/json'},
             body: jsonEncode({'meetingUri': enlace}),
           )
           .timeout(const Duration(seconds: 15));
@@ -114,9 +119,9 @@ class ConsultorioApi {
   }
 
   Future<Map<String, dynamic>> get(String ruta) async {
-    final uri = Uri.parse('${origen}api/consultorio$ruta');
+    final uri = Uri.parse('${origen}api/saludomg$ruta');
     try {
-      final respuesta = await http.get(uri, headers: cabeceras).timeout(const Duration(seconds: 40));
+      final respuesta = await http.get(uri, headers: _cabeceras).timeout(const Duration(seconds: 40));
       if (respuesta.statusCode >= 400) {
         throw ConsultorioException(_mensajeHttp(respuesta.statusCode, respuesta.body, ruta));
       }

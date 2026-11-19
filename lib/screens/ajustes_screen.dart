@@ -48,7 +48,7 @@ class _AjustesScreenState extends State<AjustesScreen> {
           const Text('Dirección de SISCOAPI', style: TextStyle(color: marino, fontSize: 18, fontWeight: FontWeight.w800)),
           const SizedBox(height: 8),
           Text(
-            'El consultorio móvil lee los mismos controladores que la web. En este dispositivo, la computadora es $sugerida. El teléfono tiene que estar en la misma red Wi-Fi.',
+            'El consultorio lee producción en $sugerida con el contrato 651 - UMO220706N63 - 305.',
             style: TextStyle(color: suave, height: 1.4),
           ),
           const SizedBox(height: 16),
@@ -103,7 +103,7 @@ class _AjustesScreenState extends State<AjustesScreen> {
                     await store.restaurarOrigen();
                     if (context.mounted) Navigator.of(context).pop();
                   },
-            child: Text('Usar la dirección de este dispositivo ($sugerida)'),
+            child: Text('Usar producción ($sugerida)'),
           ),
         ],
       ),

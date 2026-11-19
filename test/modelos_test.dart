@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sisco_hospitales_mobile/formato.dart';
+import 'package:sisco_hospitales_mobile/services/consultorio_api.dart';
 import 'package:sisco_hospitales_mobile/models/consultorio.dart';
 import 'package:sisco_hospitales_mobile/models/tarjeta_derechohabiente.dart';
 import 'package:sisco_hospitales_mobile/services/sesion.dart';
@@ -156,5 +157,13 @@ void main() {
   test('normaliza la URL del API', () {
     expect(normalizarBase('10.0.2.2:5112'), 'http://10.0.2.2:5112/');
     expect(normalizarBase('http://127.0.0.1:5112/api/consultorio/'), 'http://127.0.0.1:5112/');
+    expect(normalizarBase('https://api.centraldeoperaciones.com/api/'), 'https://api.centraldeoperaciones.com/');
+  });
+
+  test('producción usa el contrato 651 de MEDINEEC', () {
+    expect(ApiConfig.porPlataforma(), 'https://api.centraldeoperaciones.com/');
+    expect(contratoProduccion, 'UMO220706N63|305|651');
+    expect(esDireccionLocal('172.16.21.170'), isTrue);
+    expect(esDireccionLocal('api.centraldeoperaciones.com'), isFalse);
   });
 }

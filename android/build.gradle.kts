@@ -19,6 +19,16 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
+subprojects {
+    val fijarSdk = Action<Project> {
+        val android = extensions.findByName("android") ?: return@Action
+        android.javaClass.methods
+            .firstOrNull { it.name == "setCompileSdk" && it.parameterCount == 1 }
+            ?.invoke(android, 36)
+    }
+    if (state.executed) fijarSdk.execute(this) else afterEvaluate(fijarSdk)
+}
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }

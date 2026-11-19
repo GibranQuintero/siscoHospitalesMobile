@@ -30,6 +30,7 @@ class _SiscoAppState extends State<SiscoApp> {
   void initState() {
     super.initState();
     _store = ConsultorioStore(cargando: false);
+    _store.demostracion = widget.demostracion;
     _store.addListener(_alCambiar);
     _store.listo = true;
     if (widget.omitirLogin && widget.autoCargar && !widget.demostracion) {

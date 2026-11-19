@@ -20,7 +20,7 @@ void main() {
 
   testWidgets('el login abre la selección de perfil sin llamar al servicio', (tester) async {
     SharedPreferences.setMockInitialValues({});
-    await tester.pumpWidget(const SiscoApp(autoCargar: false));
+    await tester.pumpWidget(const SiscoApp(autoCargar: false, demostracion: true));
     expect(find.text('Iniciar sesión'), findsOneWidget);
 
     await tester.tap(find.text('Iniciar sesión'));
@@ -38,7 +38,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await tester.binding.setSurfaceSize(const Size(400, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(const SiscoApp(autoCargar: false));
+    await tester.pumpWidget(const SiscoApp(autoCargar: false, demostracion: true));
     await tester.tap(find.text('Iniciar sesión'));
     await tester.pumpAndSettle();
 
@@ -60,7 +60,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await tester.binding.setSurfaceSize(const Size(400, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(const SiscoApp(autoCargar: false));
+    await tester.pumpWidget(const SiscoApp(autoCargar: false, demostracion: true));
     await tester.tap(find.text('Iniciar sesión'));
     await tester.pumpAndSettle();
 

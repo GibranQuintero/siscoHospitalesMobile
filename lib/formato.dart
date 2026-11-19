@@ -130,6 +130,28 @@ String normalizarBase(String raw) {
 
 const equipoLocal = '172.16.21.170';
 
+/// API de SISCO en producción. Las rutas del consultorio cuelgan de /api/saludomg.
+const apiProduccion = 'https://api.centraldeoperaciones.com/';
+
+/// Contrato 651 - UMO220706N63 - 305 (MEDINEEC-PRUEBA).
+/// El API lo pide como rfcEmpresa|idCliente|numeroContrato.
+const contratoProduccion = 'UMO220706N63|305|651';
+
+bool esDireccionLocal(String host) {
+  final limpio = host.toLowerCase();
+  if (limpio == 'localhost' || limpio == '127.0.0.1' || limpio == '10.0.2.2' || limpio == '0.0.0.0') return true;
+  final partes = limpio.split('.');
+  if (partes.length != 4) return false;
+  final numeros = partes.map(int.tryParse).toList();
+  if (numeros.any((parte) => parte == null)) return false;
+  final a = numeros[0]!;
+  final b = numeros[1]!;
+  if (a == 10 || a == 127) return true;
+  if (a == 192 && b == 168) return true;
+  if (a == 172 && b >= 16 && b <= 31) return true;
+  return false;
+}
+
 /// En el simulador de iOS, localhost es la Mac donde corre SISCOAPI: no se reescribe.
 /// En Android (emulador o teléfono) localhost no llega a la computadora y se cambia por [equipoLocal].
 String hostEnEsteEquipo(String base, {bool esIos = false}) {
